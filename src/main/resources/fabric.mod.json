@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "autocrop",
+  "version": "1.2-mc26.1",
+  "name": "AutoCrop",
+  "description": "Client-side crop automation QoL mod. Harvest and replant crops automatically with configurable timing.",
+  "authors": [
+    "danzcrackz"
+  ],
+  "contact": {
+    "homepage": "https://github.com/Dany0443/autocrop",
+    "issues": "https://github.com/Dany0443/autocrop/issues",
+    "sources": "https://github.com/Dany0443/autocrop"
+  },
+  "license": "MIT",
+  "icon": "assets/autocrop/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.danz.autocrop.AutoCropMod"
+    ],
+    "modmenu": [
+      "com.danz.autocrop.ModMenuIntegration"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "fabric-api": ">=0.145.0",
+    "minecraft": "~26.1",
+    "java": ">=25",
+    "cloth-config": "*",
+    "modmenu": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "About me": "https://webjuniors.org/about/dan"
+      }
+    }
+  },
+  "accessWidener": "autocrop.accesswidener"
+}

@@ -1,0 +1,29 @@
+{
+  "config.autocrop.title": "AutoCrop Settings",
+  "config.autocrop.category.general": "General",
+
+  "config.autocrop.option.harvestMode":         "Harvest Mode",
+  "config.autocrop.option.harvestMode.tooltip":  "DISABLED: mod is completely inactive.\nMANUAL: replants only after you left-click a mature crop yourself.\nHARVEST (Risky): automatically scans and breaks crops in a radius every few ticks.",
+
+  "config.autocrop.option.replantDelayTicks":         "Replant Delay (ticks)",
+  "config.autocrop.option.replantDelayTicks.tooltip":  "How many ticks to wait after a crop is broken before sending the replant packet. Increase on high-latency servers to avoid ghost blocks. (0 = instant)",
+
+  "config.autocrop.option.auraCooldownTicks":         "Harvest Cooldown (ticks)",
+  "config.autocrop.option.auraCooldownTicks.tooltip":  "How many ticks between each automatic harvest sweep in Harvest (Risky) mode.",
+
+  "config.autocrop.option.riskBatchSize":         "Batch Size (Risky mode)",
+  "config.autocrop.option.riskBatchSize.tooltip":  "How many crops to break and queue per harvest sweep. Higher values are faster but more aggressive. Only active in Harvest (Risky) mode.",
+
+  "config.autocrop.option.autoRefillSeeds":         "Auto-Refill Seeds from Inventory",
+  "config.autocrop.option.autoRefillSeeds.tooltip":  "When the required seed is not in your hotbar, automatically move a stack from your main inventory (slots 9-35) into a hotbar slot before replanting.",
+
+  "config.autocrop.option.rememberMissedReplants":         "Remember Missed Replants",
+  "config.autocrop.option.rememberMissedReplants.tooltip":  "Only active in Harvest (Risky) mode. If a crop was broken but could not be replanted (no seeds), the position is remembered. Once you pick up seeds, the mod will automatically replant all remembered positions.",
+
+  "autocrop.mode.disabled":       "AutoCrop: Disabled",
+  "autocrop.mode.manual":         "AutoCrop: Manual",
+  "autocrop.mode.harvest_risky":  "AutoCrop: Harvest (Risky)",
+
+  "autocrop.keybind.cycle": "Cycle Harvest Mode",
+  "key.category.autocrop.keybind_category": "AutoCrop"
+}

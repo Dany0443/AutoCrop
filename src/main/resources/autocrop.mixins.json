@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "com.danz.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"None"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}
