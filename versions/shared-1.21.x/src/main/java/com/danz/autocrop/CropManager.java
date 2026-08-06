@@ -10,7 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -261,8 +261,8 @@ public final class CropManager {
         }
 
         Inventory inv = player.getInventory();
-        previousSlot  = inv.getSelectedSlot();
-        inv.selected  = seedSlot;
+        previousSlot = inv.getSelectedSlot();
+        inv.setSelectedSlot(seedSlot);
 
         BlockPos       farmland = replant.pos().below();
         Vec3           hitVec   = Vec3.atCenterOf(farmland).add(0, 0.5, 0);
@@ -272,7 +272,7 @@ public final class CropManager {
         player.swing(InteractionHand.MAIN_HAND);
 
         if (previousSlot >= 0 && previousSlot != seedSlot) {
-            inv.selected = previousSlot;
+            inv.setSelectedSlot(previousSlot);
         }
         previousSlot = -1;
 
@@ -345,8 +345,8 @@ public final class CropManager {
     }
 
     private int swapSeedFromInventory(Minecraft client, Item seed) {
-        LocalPlayer player      = client.player;
-        int         invSlot     = findSeedInInventory(player, seed);
+        LocalPlayer player  = client.player;
+        int         invSlot = findSeedInInventory(player, seed);
         if (invSlot == -1) return -1;
 
         Inventory inv          = player.getInventory();
@@ -356,11 +356,11 @@ public final class CropManager {
         }
         if (targetHotbar == -1) targetHotbar = inv.getSelectedSlot();
 
-        client.gameMode.handleContainerInput(
+        client.gameMode.handleInventoryMouseClick(
             player.inventoryMenu.containerId,
             invSlot,
             targetHotbar,
-            ContainerInput.SWAP,
+            ClickType.SWAP,
             player
         );
 
