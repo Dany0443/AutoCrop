@@ -124,7 +124,7 @@ public final class CropManager {
             clearRememberedReplants();
         }
 
-        client.gui.setOverlayMessage(
+        client.gui.hud.setOverlayMessage(
             Component.translatable(next.translationKey()),
             false
         );
