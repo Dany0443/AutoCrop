@@ -1,6 +1,6 @@
 # AutoCrop
 
-A lightweight, client-side QoL (Quality of Life) mod for Minecraft 26.1 Fabric that handles the tedious parts of farming for you. It automatically harvests and replants crops based on your settings.
+A lightweight, client-side QoL (Quality of Life) mod for Minecraft 26.2 Fabric that handles the tedious parts of farming for you. It automatically harvests and replants crops based on your settings.
 
 ## How it works
 You can cycle through three different modes using an in-game keybind:
@@ -16,9 +16,9 @@ You can cycle through three different modes using an in-game keybind:
 
 ## Requirements
 Make sure you have these installed:
-* Minecraft 26.1
-* Fabric Loader >=0.18.4
-* Fabric API >=0.145.0
+* Minecraft 26.2
+* Fabric Loader >=0.19.3
+* Fabric API >=0.154.2
 * Java 25
 * Cloth Config API (Required for settings)
 * ModMenu (Required to access the config screen)
