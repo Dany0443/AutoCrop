@@ -124,10 +124,31 @@ public final class CropManager {
             clearRememberedReplants();
         }
 
-        client.gui.hud.setOverlayMessage(
-            Component.translatable(next.translationKey()),
-            false
-        );
+        showOverlayMessage(client, Component.translatable(next.translationKey()));
+    }
+
+    private static void showOverlayMessage(Minecraft client, Component message) {
+        try {
+            java.lang.reflect.Method m = client.gui.getClass().getMethod("setOverlayMessage", Component.class, boolean.class);
+            m.invoke(client.gui, message, false);
+        } catch (Exception e1) {
+            try {
+                java.lang.reflect.Method m = client.gui.getClass().getMethod("setOverlayMessage", Component.class);
+                m.invoke(client.gui, message);
+            } catch (Exception e2) {
+                if (client.player != null) {
+                    try {
+                        java.lang.reflect.Method m = client.player.getClass().getMethod("displayClientMessage", Component.class, boolean.class);
+                        m.invoke(client.player, message, true);
+                    } catch (Exception e3) {
+                        try {
+                            java.lang.reflect.Method m = client.player.getClass().getMethod("sendSystemMessage", Component.class);
+                            m.invoke(client.player, message);
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+        }
     }
 
     private void tickRiskyAura(Minecraft client, AutoCropConfig cfg) {
