@@ -12,7 +12,7 @@
     "issues": "https://github.com/Dany0443/autocrop/issues",
     "sources": "https://github.com/Dany0443/autocrop"
   },
-  "license": "MIT",
+  "license": "GPL-3.0",
   "icon": "assets/autocrop/icon.png",
   "environment": "client",
   "entrypoints": {
