@@ -1,21 +1,23 @@
-version = project.mod_version
+version = "${project.mod_version}-mc${project.minecraft_version}"
 group = project.maven_group
 
 base {
     archivesName = project.archives_base_name
 }
 
+// java 25 configuration
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(Integer.parseInt(project.java_version))
+        languageVersion = JavaLanguageVersion.of(25)
     }
     withSourcesJar()
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.release = Integer.parseInt(project.java_version)
+    options.release = 25
 }
 
+// repositories
 repositories {
     maven {
         name = "FabricMC"
@@ -32,6 +34,7 @@ repositories {
     mavenCentral()
 }
 
+// dependencies
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings loom.officialMojangMappings()
@@ -57,14 +60,14 @@ processResources {
     inputs.property("mod_version", project.mod_version)
     inputs.property("minecraft_version", project.minecraft_version)
     inputs.property("loader_version", project.loader_version)
-    inputs.property("java_version", project.java_version)
+    inputs.property("java_version", "25")
 
     filesMatching("fabric.mod.json") {
         expand(
             mod_version: project.mod_version,
             minecraft_version: project.minecraft_version,
             loader_version: project.loader_version,
-            java_version: project.java_version
+            java_version: "25"
         )
     }
 }

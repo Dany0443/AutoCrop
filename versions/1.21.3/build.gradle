@@ -1,0 +1,6 @@
+plugins {
+    id "net.fabricmc.fabric-loom-remap" version "1.15.1"
+    id "maven-publish"
+}
+
+apply from: "../build-1.21.x.gradle"

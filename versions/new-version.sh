@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# script to scaffold a new minecraft version subproject
 set -euo pipefail
 
 if [ "$#" -ne 2 ]; then
@@ -29,7 +30,7 @@ cp "$from_dir/gradle.properties" "$new_dir/gradle.properties"
 cp "$from_dir/settings.gradle" "$new_dir/settings.gradle"
 
 sed -i "s/^minecraft_version=.*/minecraft_version=$new_version/" "$new_dir/gradle.properties"
-sed -i "s/^mod_version=.*/mod_version=1.2-mc$new_version/" "$new_dir/gradle.properties"
+sed -i "s/^mod_version=.*/mod_version=1.4/" "$new_dir/gradle.properties"
 sed -i "s/^rootProject.name = .*/rootProject.name = \"autocrop-$new_version\"/" "$new_dir/settings.gradle"
 
 echo "Created $new_dir"
