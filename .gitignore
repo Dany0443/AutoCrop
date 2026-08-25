@@ -1,41 +1,52 @@
-# gradle
-
+# gradle build directories and caches
 .gradle/
+**/.gradle/
 build/
+**/build/
 out/
+**/out/
 classes/
+**/classes/
+bin/
+**/bin/
+gradle-app.setting
+
+# release jars and distribution outputs
 releases/
+dist_jars/
+release_artifacts/
+**/devlibs/
 
-# eclipse
-
-*.launch
-
-# idea
-
+# idea and eclipse ide files
 .idea/
+**/.idea/
 *.iml
+**/*.iml
 *.ipr
 *.iws
-
-# vscode
-
 .settings/
+**/.settings/
 .vscode/
-bin/
+**/.vscode/
 .classpath
 .project
 
-# macos
+# ai assistant and agent workspace directories
+.agents/
+**/.agents/
+.codex/
+**/.codex/
 
-*.DS_Store
-
-# fabric
-
+# runtime directory and java crash logs
 run/
-
-# java
-
+**/run/
+*.log
+**/*.log
 hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+
+# os generated metadata files
+.DS_Store
+Thumbs.db

@@ -66,7 +66,7 @@ public class ModMenuIntegration implements ModMenuApi {
         );
 
         ConfigCategory risky = builder.getOrCreateCategory(
-            Component.literal("⚠ Harvest (Risky) Settings")
+            Component.literal("Harvest (Risky) Settings")
         );
 
         risky.addEntry(
