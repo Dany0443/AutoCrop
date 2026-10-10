@@ -63,14 +63,14 @@ processResources {
     }
 }
 
+loom {
+    accessWidenerPath = file("src/main/resources/autocrop.accesswidener")
+}
+
 jar {
     from("LICENSE") {
         rename { "${it}_${base.archivesName.get()}" }
     }
-}
-
-loom {
-    accessWidenerPath = file("src/main/resources/autocrop.accesswidener")
 }
 
 publishing {
@@ -82,3 +82,4 @@ publishing {
     repositories {
     }
 }
+
