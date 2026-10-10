@@ -36,7 +36,7 @@ jobs:
           echo "safe_name=${SAFE_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Upload jar artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: autocrop-${{ steps.branch_name.outputs.safe_name }}
           path: |
