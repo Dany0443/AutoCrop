@@ -10,7 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -179,75 +179,82 @@ public final class CropManager {
             if (!isWithinActionReach(player, immutablePos)) continue;
 
             client.gameMode.startDestroyBlock(immutablePos, Direction.UP);
-            player.swing(InteractionHand.MAIN_HAND);
+            client.gameMode.destroyBlock(immutablePos);
             breaksSentThisSweep.add(immutablePos);
+
             enqueueReplant(new PendingReplant(immutablePos, maybeSeed.get()));
+
             found++;
+            if (found >= cfg.riskBatchSize) break;
         }
 
-        if (found > 0) auraTimer = cfg.auraCooldownTicks;
+        if (found > 0) {
+            auraTimer = cfg.auraCooldownTicks;
+        }
     }
 
     private void retryMissedReplants(Minecraft client, AutoCropConfig cfg) {
-        if (missedReplants.isEmpty()) return;
+        if (!cfg.rememberMissedReplants || missedReplants.isEmpty()) return;
+        if (machineState != MachineState.IDLE || !queue.isEmpty()) return;
 
         LocalPlayer player = client.player;
         ClientLevel level  = client.level;
+        int limit = Math.max(1, cfg.riskBatchSize);
+        int queuedCount = 0;
+
         Iterator<PendingReplant> it = missedReplants.iterator();
+        while (it.hasNext() && queuedCount < limit) {
+            PendingReplant replant = it.next();
 
-        while (it.hasNext()) {
-            if (queue.size() >= Math.max(1, cfg.riskBatchSize)) break;
+            if (!isWithinActionReach(player, replant.pos())) continue;
 
-            PendingReplant missed = it.next();
-            if (!canRetryNow(missed)) continue;
-
-            BlockState current = level.getBlockState(missed.pos());
+            BlockState current = level.getBlockState(replant.pos());
             if (isPlantedCrop(current)) {
                 it.remove();
-                missedRetryAfterTick.remove(missed);
+                missedRetryAfterTick.remove(replant);
                 continue;
             }
 
-            if (!current.isAir()) {
-                if (current.getBlock() instanceof CropBlock crop && crop.isMaxAge(current)) {
-                    scheduleRetry(missed, cfg);
-                } else {
-                    it.remove();
-                    missedRetryAfterTick.remove(missed);
-                }
+            if (!current.isAir()) continue;
+
+            BlockState below = level.getBlockState(replant.pos().below());
+            if (!isValidFarmlandForSeed(below, replant.seed())) continue;
+
+            if (!canRetryNow(replant)) continue;
+
+            if (!hasSeedAvailable(player, cfg, replant.seed())) {
+                scheduleRetry(replant, cfg);
                 continue;
             }
 
-            if (!isWithinActionReach(player, missed.pos())) {
-                scheduleRetry(missed, cfg);
-                continue;
-            }
-
-            if (!hasSeedAvailable(player, cfg, missed.seed())) {
-                scheduleRetry(missed, cfg);
-                continue;
-            }
-
-            if (enqueueReplant(missed)) {
+            if (enqueueReplant(replant)) {
+                queuedCount++;
                 it.remove();
-                missedRetryAfterTick.remove(missed);
-            } else {
-                scheduleRetry(missed, cfg);
+                missedRetryAfterTick.remove(replant);
             }
         }
     }
 
-    private void executeNextReplant(Minecraft client, AutoCropConfig cfg) {
-        if (queue.isEmpty()) { machineState = MachineState.IDLE; return; }
+    private boolean isValidFarmlandForSeed(BlockState belowState, Item seed) {
+        if (seed == Items.NETHER_WART) {
+            return belowState.is(Blocks.SOUL_SAND);
+        }
+        return belowState.is(Blocks.FARMLAND);
+    }
 
+    private void executeNextReplant(Minecraft client, AutoCropConfig cfg) {
         PendingReplant replant = queue.poll();
-        if (replant == null) { machineState = MachineState.IDLE; return; }
+        if (replant == null) {
+            machineState = MachineState.IDLE;
+            return;
+        }
         queuedPositions.remove(replant.pos());
 
         LocalPlayer player = client.player;
         ClientLevel level  = client.level;
 
         BlockState current = level.getBlockState(replant.pos());
+
         if (isPlantedCrop(current)) {
             clearRemembered(replant);
             advanceState(cfg);
@@ -255,9 +262,13 @@ public final class CropManager {
         }
 
         if (!current.isAir()) {
-            if (current.getBlock() instanceof CropBlock crop && crop.isMaxAge(current)) {
-                rememberForRetry(replant, cfg);
-            } else {
+            advanceState(cfg);
+            return;
+        }
+
+        BlockState below = level.getBlockState(replant.pos().below());
+        if (!isValidFarmlandForSeed(below, replant.seed())) {
+            if (below.isAir()) {
                 clearRemembered(replant);
             }
             advanceState(cfg);
@@ -282,8 +293,8 @@ public final class CropManager {
         }
 
         Inventory inv = player.getInventory();
-        previousSlot  = inv.getSelectedSlot();
-        inv.selected  = seedSlot;
+        previousSlot = getSelectedSlot(inv);
+        setSelectedSlot(inv, seedSlot);
 
         BlockPos       farmland = replant.pos().below();
         Vec3           hitVec   = Vec3.atCenterOf(farmland).add(0, 0.5, 0);
@@ -293,7 +304,7 @@ public final class CropManager {
         player.swing(InteractionHand.MAIN_HAND);
 
         if (previousSlot >= 0 && previousSlot != seedSlot) {
-            inv.selected = previousSlot;
+            setSelectedSlot(inv, previousSlot);
         }
         previousSlot = -1;
 
@@ -366,8 +377,8 @@ public final class CropManager {
     }
 
     private int swapSeedFromInventory(Minecraft client, Item seed) {
-        LocalPlayer player      = client.player;
-        int         invSlot     = findSeedInInventory(player, seed);
+        LocalPlayer player  = client.player;
+        int         invSlot = findSeedInInventory(player, seed);
         if (invSlot == -1) return -1;
 
         Inventory inv          = player.getInventory();
@@ -375,17 +386,55 @@ public final class CropManager {
         for (int i = 0; i < 9; i++) {
             if (inv.getItem(i).isEmpty()) { targetHotbar = i; break; }
         }
-        if (targetHotbar == -1) targetHotbar = inv.getSelectedSlot();
+        if (targetHotbar == -1) targetHotbar = getSelectedSlot(inv);
 
-        client.gameMode.handleContainerInput(
+        client.gameMode.handleInventoryMouseClick(
             player.inventoryMenu.containerId,
             invSlot,
             targetHotbar,
-            ContainerInput.SWAP,
+            ClickType.SWAP,
             player
         );
 
         return targetHotbar;
+    }
+
+    private static int getSelectedSlot(Inventory inv) {
+        try {
+            java.lang.reflect.Method m = inv.getClass().getMethod("getSelectedSlot");
+            return (int) m.invoke(inv);
+        } catch (Exception ignored) {
+            try {
+                java.lang.reflect.Field f = inv.getClass().getField("selected");
+                return f.getInt(inv);
+            } catch (Exception e) {
+                try {
+                    java.lang.reflect.Field f = inv.getClass().getDeclaredField("selected");
+                    f.setAccessible(true);
+                    return f.getInt(inv);
+                } catch (Exception ex) {
+                    return 0;
+                }
+            }
+        }
+    }
+
+    private static void setSelectedSlot(Inventory inv, int slot) {
+        try {
+            java.lang.reflect.Method m = inv.getClass().getMethod("setSelectedSlot", int.class);
+            m.invoke(inv, slot);
+        } catch (Exception ignored) {
+            try {
+                java.lang.reflect.Field f = inv.getClass().getField("selected");
+                f.setInt(inv, slot);
+            } catch (Exception e) {
+                try {
+                    java.lang.reflect.Field f = inv.getClass().getDeclaredField("selected");
+                    f.setAccessible(true);
+                    f.setInt(inv, slot);
+                } catch (Exception ignored2) {}
+            }
+        }
     }
 
     private boolean enqueueReplant(PendingReplant replant) {
