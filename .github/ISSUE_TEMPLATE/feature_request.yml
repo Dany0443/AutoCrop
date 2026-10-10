@@ -20,3 +20,4 @@ body:
       description: Why would this feature be useful for AutoCrop users?
     validations:
       required: true
+

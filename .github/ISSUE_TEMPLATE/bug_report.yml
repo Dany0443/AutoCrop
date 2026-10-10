@@ -51,3 +51,4 @@ body:
       label: Logs / Crash Report
       description: Paste any crash reports or console logs here.
       render: text
+

@@ -39,7 +39,7 @@ jobs:
           - "main"
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ matrix.branch }}
 
@@ -47,7 +47,7 @@ jobs:
         uses: gradle/actions/wrapper-validation@v4
 
       - name: Set up Java 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: '25'
           distribution: 'microsoft'
@@ -59,7 +59,7 @@ jobs:
         run: ./gradlew build --no-daemon
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-jars-${{ matrix.branch }}
           path: |
@@ -74,10 +74,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Download all compiled jars
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: release_artifacts
           pattern: release-jars-*
