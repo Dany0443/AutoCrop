@@ -2,7 +2,7 @@
 
 A lightweight, client-side QoL (Quality of Life) mod for Fabric Minecraft that handles the tedious parts of farming for you. It automatically harvests and replants crops based on your settings.
 
-[Documentation](docs.md) | License: GPL-3.0
+License: [GPL-3.0](LICENSE)
 
 ---
 
@@ -29,46 +29,91 @@ AutoCrop uses a **Branch-Per-Version Architecture** compiled on Java 25 across 1
 
 ---
 
-## How It Works
+## Core Mechanics & Harvest Modes
 
-You can cycle through three different modes using an in-game keybind:
-* **Disabled:** The mod is entirely inactive. Vanilla behavior.
-* **Manual:** You break a fully grown crop yourself, and the mod automatically sends a packet to replant it for you.
-* **Harvest (Risky):** The mod actively scans your surroundings and automatically breaks and replants mature crops in a radius. *(Note: Called "risky" because aggressive settings might get flagged by strict server anti-cheats).*
+You can cycle through three different modes using the configured in-game keybind (default: Options -> Controls -> Key Binds -> AutoCrop):
+
+| Mode | Behavior | Recommended Use Case |
+|---|---|---|
+| `DISABLED` | The mod is entirely inactive. Vanilla behavior. | Normal gameplay or strict minigame environments. |
+| `MANUAL` | Player breaks a mature crop manually; mod automatically queues an instant replant packet. | Standard vanilla survival, public SMPs, anti-cheat servers. |
+| `HARVEST_RISKY` | Automated 3D aura scanner breaks and replants mature crops within reach radius. | Private SMPs, singleplayer farms, massive automated harvesting. |
+
+> [!WARNING]
+> `HARVEST_RISKY` sends automated block-break packets. Do not use this mode on competitive servers with strict anti-cheat plugins to avoid accidental rate-limit flags.
+
+### Supported Crops & Seeds
+
+| Crop Block | Maximum Age | Seed Item | Required Soil |
+|---|---|---|---|
+| Wheat (`CropBlock`) | 7 | `Items.WHEAT_SEEDS` | Farmland |
+| Carrots (`CarrotBlock`) | 7 | `Items.CARROT` | Farmland |
+| Potatoes (`PotatoBlock`) | 7 | `Items.POTATO` | Farmland |
+| Beetroots (`BeetrootBlock`) | 3 | `Items.BEETROOT_SEEDS` | Farmland |
+| Nether Wart (`NetherWartBlock`) | 3 | `Items.NETHER_WART` | Soul Sand |
 
 ---
 
 ## Features
 
-* **Auto-Refill Seeds:** If your hotbar runs out of seeds, the mod will automatically pull a stack from your main inventory to keep planting.
-* **Missed Replant Memory:** If you run out of seeds completely, it remembers which dirt blocks are empty and will automatically replant them as soon as you pick up more seeds.
-* **Custom Tick Delays:** Tweak the delay (in ticks) for breaking and replanting. Bump this up if you are playing on a laggy or high-ping server to prevent ghost blocks.
-* **In-Game Config:** Fully integrated with Cloth Config so you can tweak your harvest batch sizes and cooldowns without leaving the game.
+* **Auto-Refill Seeds:** If your hotbar runs out of seeds, the mod automatically scans inventory slots 9-35 and swaps matching seeds into your active hotbar slot.
+* **Missed Replant Memory Buffer:** Remembers unplanted farmland coordinates when running low on seeds and retries once seeds enter the inventory.
+* **Custom Tick Delays:** Configurable replant and break delays (in ticks) to prevent ghost blocks on laggy or high-ping servers.
+* **In-Game Configuration:** Fully integrated with Cloth Config and ModMenu so you can adjust batch sizes, delays, and aura cooldowns without restarting.
 
 ---
 
-## Requirements
+## Configuration Reference
 
-Make sure you have these installed:
-* Fabric Loader (see version table)
-* Fabric API
-* Java 25
-* Cloth Config API (Required for settings)
-* ModMenu (Required to access the config screen)
+AutoCrop uses Cloth Config to save options to `config/autocrop.json`. All settings can be adjusted in-game via ModMenu.
+
+### General Settings
+
+| Option | JSON Key | Type | Default | Range | Description |
+|---|---|---|---|---|---|
+| Harvest Mode | `harvestMode` | Enum | `MANUAL` | `DISABLED`, `MANUAL`, `HARVEST_RISKY` | Active harvesting behavior. |
+| Replant Delay | `replantDelayTicks` | Integer | `3` | `0` - `10` ticks | Delay between breaking a crop and executing the replant. |
+| Auto-Refill Seeds | `autoRefillSeeds` | Boolean | `true` | `true` / `false` | Automatically pull seeds from main inventory into hotbar. |
+
+### Harvest (Risky) Settings
+
+| Option | JSON Key | Type | Default | Range | Description |
+|---|---|---|---|---|---|
+| Aura Cooldown | `auraCooldownTicks` | Integer | `5` | `1` - `20` ticks | Delay in ticks between automated harvesting sweeps. |
+| Risk Batch Size | `riskBatchSize` | Integer | `5` | `1` - `32` crops | Maximum number of crops harvested per aura sweep. |
+| Remember Missed Replants | `rememberMissedReplants` | Boolean | `true` | `true` / `false` | Store unplanted positions in a buffer to retry later. |
+| Retry Cooldown | `missedReplantRetryCooldownTicks` | Integer | `20` | `1` - `200` ticks | Ticks between retrying remembered farmland blocks. |
 
 ---
 
-## Installation
+## Requirements & Installation
 
-1. Drop the compiled `.jar` file into your `.minecraft/mods` folder along with the required dependencies.
-2. Launch the game.
-3. Configure your preferred keybind in Options -> Key Binds -> AutoCrop.
+1. Install the following in your `.minecraft/mods` folder:
+   - **Fabric Loader** (see version table above)
+   - **Fabric API**
+   - **Java 25**
+   - **Cloth Config API**
+   - **ModMenu** (optional, to access the in-game settings screen)
+2. Drop the compiled AutoCrop `.jar` for your Minecraft version into `.minecraft/mods`.
+3. Launch Minecraft and configure your keybind under Options -> Controls -> Key Binds -> AutoCrop.
 
 ---
 
-## Documentation
+## Building from Source
 
-For full configuration guides, mechanics breakdown, and development instructions, see [docs.md](docs.md).
+Each version branch is completely self-contained at the repository root:
+
+```bash
+# Build current branch (Minecraft 26.3 on main)
+./gradlew build
+
+# Switch to another version branch and build
+git switch 26.2
+./gradlew build
+
+git switch 1.21.1
+./gradlew build
+```
 
 ---
 
