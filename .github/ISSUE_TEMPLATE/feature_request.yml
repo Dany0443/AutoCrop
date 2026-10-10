@@ -1,0 +1,22 @@
+name: Feature Request
+description: Propose a new idea, feature, or improvement for AutoCrop
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We appreciate suggestions and feature requests!
+  - type: textarea
+    id: feature
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the requested feature.
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Motivation & Context
+      description: Why would this feature be useful for AutoCrop users?
+    validations:
+      required: true
