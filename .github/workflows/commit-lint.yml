@@ -1,0 +1,35 @@
+name: commit-lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  commitlint:
+    name: Lint Commit Messages
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install commitlint
+        run: npm install --no-save @commitlint/cli @commitlint/config-conventional
+
+      - name: Validate PR commits
+        if: github.event_name == 'pull_request'
+        run: npx --yes @commitlint/cli --config .commitlintrc.json --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+      - name: Validate push commit
+        if: github.event_name == 'push'
+        run: npx --yes @commitlint/cli --config .commitlintrc.json --from HEAD~1 --to HEAD --verbose
+
