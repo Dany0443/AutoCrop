@@ -8,23 +8,24 @@ A lightweight, client-side QoL (Quality of Life) mod for Fabric Minecraft that h
 
 ## Supported Versions
 
-AutoCrop provides standalone builds compiled on Java 25 across 13 Minecraft releases:
+AutoCrop uses a **Branch-Per-Version Architecture** compiled on Java 25 across 14 Minecraft releases. Every branch is a standalone, self-contained project:
 
-| Minecraft Version | Loom Remap Target | Recommended Fabric Loader |
-|---|---|---|
-| 1.21.1 | `versions/1.21.1` | `>=0.19.2` |
-| 1.21.2 | `versions/1.21.2` | `>=0.19.2` |
-| 1.21.3 | `versions/1.21.3` | `>=0.19.2` |
-| 1.21.4 | `versions/1.21.4` | `>=0.19.2` |
-| 1.21.5 | `versions/1.21.5` | `>=0.19.2` |
-| 1.21.6 | `versions/1.21.6` | `>=0.19.2` |
-| 1.21.7 | `versions/1.21.7` | `>=0.19.2` |
-| 1.21.8 | `versions/1.21.8` | `>=0.19.2` |
-| 1.21.9 | `versions/1.21.9` | `>=0.19.2` |
-| 1.21.10 | `versions/1.21.10` | `>=0.19.2` |
-| 1.21.11 | `versions/1.21.11` | `>=0.19.2` |
-| 26.1 | `versions/26.1` | `>=0.18.4` |
-| 26.2 | `versions/26.2` | `>=0.18.4` |
+| Minecraft Version | Dedicated Git Branch | Fabric Loader | Fabric API |
+|---|---|---|---|
+| **26.3 (Latest)** | `main` | `>=0.19.5` | `>=0.162.0+26.3` |
+| 26.2 | `26.2` | `>=0.18.4` | `>=0.145.2+26.1.1` |
+| 26.1 | `26.1` | `>=0.18.4` | `>=0.145.2+26.1.1` |
+| 1.21.11 | `1.21.11` | `>=0.19.2` | `>=0.141.4+1.21.11` |
+| 1.21.10 | `1.21.10` | `>=0.19.2` | `>=0.138.4+1.21.10` |
+| 1.21.9 | `1.21.9` | `>=0.19.2` | `>=0.134.1+1.21.9` |
+| 1.21.8 | `1.21.8` | `>=0.19.2` | `>=0.136.1+1.21.8` |
+| 1.21.7 | `1.21.7` | `>=0.19.2` | `>=0.129.0+1.21.7` |
+| 1.21.6 | `1.21.6` | `>=0.19.2` | `>=0.128.2+1.21.6` |
+| 1.21.5 | `1.21.5` | `>=0.19.2` | `>=0.128.2+1.21.5` |
+| 1.21.4 | `1.21.4` | `>=0.19.2` | `>=0.119.4+1.21.4` |
+| 1.21.3 | `1.21.3` | `>=0.19.2` | `>=0.114.1+1.21.3` |
+| 1.21.2 | `1.21.2` | `>=0.19.2` | `>=0.106.1+1.21.2` |
+| 1.21.1 | `1.21.1` | `>=0.19.2` | `>=0.116.11+1.21.1` |
 
 ---
 

@@ -12,7 +12,7 @@ AutoCrop is a client-side Fabric mod designed to eliminate tedious repetitive ac
 
 ### Key Highlights
 - **100% Client-Side**: No server-side installation required. Works on singleplayer worlds, LAN games, and multiplayer servers.
-- **Cross-Version Architecture**: Dedicated support across 13 Minecraft versions (`1.21.1` to `1.21.11`, `26.1`, `26.2`).
+- **Cross-Version Architecture**: Dedicated support across 14 Minecraft versions (`1.21.1` to `1.21.11`, `26.1`, `26.2`, `26.3`).
 - **Zero Vanilla De-sync**: Respects client tick cycles, interaction hands, and server packet timing to prevent ghost blocks.
 - **Smart Inventory Refill**: Automatically locates matching seeds across main inventory slots and swaps them into the hotbar.
 - **Missed Replant Memory Queue**: Remembers unplanted farmland coordinates when running low on seeds and retries once seeds are acquired.
@@ -93,36 +93,51 @@ AutoCrop uses Cloth Config to save options to `config/autocrop.json`. All settin
 
 ---
 
-## 4. Multi-Version Support & Structure
+## 4. Multi-Version Support & Architecture
 
-AutoCrop maintains standalone compilation targets for each supported Minecraft release:
+AutoCrop utilizes the **Branch-Per-Version Architecture**:
+- Every branch is a standalone, self-contained Gradle project that builds immediately upon checkout.
+- `main` always tracks the latest supported Minecraft version (**Minecraft 26.3**).
+- Dedicated git branches exist for all supported earlier releases:
+  - `26.2`
+  - `26.1`
+  - `1.21.11` down through `1.21.1`
+- No nested `versions/` subdirectories exist on any branch, eliminating duplicated wrappers and repository bloat.
+
+### Branch Layout
 
 ```
 autocrop/
-├── build.gradle                   # Root Gradle build script (MC 26.2 target)
-├── gradle.properties              # Root properties (mod_version, java 25)
-├── settings.gradle                # Root settings
-├── LICENSE                        # GNU General Public License v3.0
-├── docs.md                        # Complete mod documentation
-├── README.md                      # Repository readme
-├── src/                           # Shared modern codebase (MC 26.x)
-└── versions/                      # Standalone version subprojects
-    ├── 1.21.1/                    # Target Minecraft 1.21.1
-    ├── 1.21.2/                    # Target Minecraft 1.21.2
-    ├── 1.21.3/                    # Target Minecraft 1.21.3
-    ├── 1.21.4/                    # Target Minecraft 1.21.4
-    ├── 1.21.5/                    # Target Minecraft 1.21.5
-    ├── 1.21.6/                    # Target Minecraft 1.21.6
-    ├── 1.21.7/                    # Target Minecraft 1.21.7
-    ├── 1.21.8/                    # Target Minecraft 1.21.8
-    ├── 1.21.9/                    # Target Minecraft 1.21.9
-    ├── 1.21.10/                   # Target Minecraft 1.21.10
-    ├── 1.21.11/                   # Target Minecraft 1.21.11
-    ├── 26.1/                      # Target Minecraft 26.1
-    ├── 26.2/                      # Target Minecraft 26.2
-    ├── build-1.21.x.gradle        # Shared Gradle configuration for 1.21.x
-    ├── build-26.x.gradle          # Shared Gradle configuration for 26.x
-    └── new-version.sh             # Scaffold script for new Minecraft versions
+├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.yml
+│   │   └── feature_request.yml
+│   ├── workflows/
+│   │   ├── build.yml           # CI: Compiles jar on push and PR
+│   │   ├── commit-lint.yml     # Lints PR titles and commits
+│   │   └── release-draft.yml   # Multi-version release matrix
+│   ├── dependabot.yml          # Monthly GitHub Actions upgrades
+│   └── pull_request_template.md
+├── gradle/
+│   └── wrapper/
+│       ├── gradle-wrapper.jar
+│       └── gradle-wrapper.properties
+├── src/
+│   └── main/
+│       ├── java/com/danz/autocrop/...
+│       └── resources/...
+├── .commitlintrc.json
+├── .gitattributes
+├── .gitignore
+├── build.gradle
+├── CONTRIBUTING.md
+├── docs.md
+├── gradle.properties
+├── gradlew
+├── gradlew.bat
+├── LICENSE
+├── README.md
+└── settings.gradle
 ```
 
 ---
@@ -135,25 +150,19 @@ autocrop/
 
 ### Build Commands
 
-To build all subprojects or a specific target from the repository root:
+Each version branch is completely self-contained at root:
 
 ```bash
-# Build root project (MC 26.2)
+# Build current branch (e.g. MC 26.3 on main)
 ./gradlew build
 
-# Build specific Minecraft version subproject
-./gradlew -p versions/1.21.1 build
+# Switch to another Minecraft version and build
+git switch 26.2
+./gradlew build
+
+git switch 1.21.1
+./gradlew build
 ```
-
-### Adding a New Minecraft Version
-
-To scaffold a new subproject target:
-
-```bash
-./versions/new-version.sh 1.21.12 1.21.11
-```
-
-Then verify mappings and dependencies inside `versions/1.21.12/gradle.properties`.
 
 ---
 

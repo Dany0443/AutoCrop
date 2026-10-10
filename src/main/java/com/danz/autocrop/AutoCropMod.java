@@ -9,7 +9,6 @@ import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
-import org.lwjgl.glfw.GLFW;
 
 public class AutoCropMod implements ClientModInitializer {
 
@@ -26,8 +25,7 @@ public class AutoCropMod implements ClientModInitializer {
 
         keyCycleMode = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "autocrop.keybind.cycle",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_UNKNOWN,
+            InputConstants.UNKNOWN.getValue(),
             myCategory
         ));
 
