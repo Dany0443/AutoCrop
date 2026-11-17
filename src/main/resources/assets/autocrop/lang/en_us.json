@@ -12,7 +12,7 @@
   "config.autocrop.option.autoRefillSeeds": "Refill seeds for me",
   "config.autocrop.option.autoRefillSeeds.tooltip": "Use seeds from your inventory when the hotbar runs out. An empty hotbar slot is preferred. If the hotbar is full, your selected item is moved into your inventory to make room.",
   "config.autocrop.option.rememberMissedReplants": "Remember Missed Replants",
-  "config.autocrop.option.rememberMissedReplants.tooltip": "Automatic harvesting only. Retry positions AutoCrop harvested when replanting fails or seeds are unavailable. Does not fill other empty plots unless Fill Empty Farm Plots is enabled.",
+  "config.autocrop.option.rememberMissedReplants.tooltip": "Retry the exact spots where you or AutoCrop broke mature crops when replanting fails, seeds are unavailable, or you move out of reach. Does not fill other empty plots unless Fill Empty Farm Plots is enabled.",
   "config.autocrop.option.missedReplantRetryCooldownTicks": "Retry Cooldown (ticks)",
   "config.autocrop.option.missedReplantRetryCooldownTicks.tooltip": "Delay between retry attempts for each remembered spot. Increase to reduce packet spam while moving around large farms.",
   "autocrop.mode.disabled": "AutoCrop: Disabled",
