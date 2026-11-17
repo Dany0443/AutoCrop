@@ -7,11 +7,10 @@ on:
   workflow_dispatch:
     inputs:
       versions:
-        description: Minecraft versions to compile from the selected branch
-        type: choice
+        description: 'Comma-separated Minecraft versions (26.1,26.2,26.3,1.21.11), or all'
+        type: string
         required: true
-        default: both
-        options: [both, '26.2', '26.3']
+        default: '26.1,26.2,26.3,1.21.11'
 
 permissions:
   contents: read

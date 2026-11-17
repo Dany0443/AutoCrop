@@ -5,16 +5,24 @@ from pathlib import Path
 import re
 import subprocess
 
-SUPPORTED = ['26.2', '26.3']
+SUPPORTED = ['26.1', '26.2', '26.3', '1.21.11']
+
+
+def parse_versions(value):
+    value = value.strip()
+    if value == 'all':
+        return SUPPORTED.copy()
+    if value == 'both':  # Compatibility for older manual/API invocations.
+        return ['26.2', '26.3']
+    targets = list(dict.fromkeys(part.strip() for part in value.split(',')))
+    if any(target not in SUPPORTED for target in targets):
+        raise ValueError('Use comma-separated supported Minecraft versions: ' + ', '.join(SUPPORTED))
+    return targets
 
 
 def select_targets(paths, manual=None):
-    if manual:
-        if manual == 'both':
-            return SUPPORTED.copy()
-        if manual not in SUPPORTED:
-            raise ValueError(f'Unsupported Minecraft target: {manual}')
-        return [manual]
+    if manual is not None:
+        return parse_versions(manual)
 
     targets = set()
     for path in paths:
@@ -37,7 +45,7 @@ def changed_paths(event, event_name):
         base, head = event['before'], event['after']
         separator = '..'
         if base == '0' * 40:
-            return ['build.gradle']  # First push: verify both targets.
+            return ['build.gradle']  # First push: verify all supported targets.
         if head == '0' * 40:
             return []  # Deleted branch.
     else:
@@ -59,7 +67,7 @@ def main():
     event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text())
     event_name = os.environ['GITHUB_EVENT_NAME']
     if event_name == 'workflow_dispatch':
-        targets = select_targets([], event.get('inputs', {}).get('versions', 'both'))
+        targets = select_targets([], event.get('inputs', {}).get('versions', 'all'))
     else:
         targets = select_targets(changed_paths(event, event_name))
     output = f'targets={json.dumps(targets)}\nhas_targets={str(bool(targets)).lower()}\n'
