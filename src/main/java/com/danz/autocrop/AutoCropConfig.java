@@ -40,23 +40,23 @@ public class AutoCropConfig implements ConfigData {
     public HarvestMode resumeMode = HarvestMode.HARVEST_RISKY;
     public SetupPreset setupPreset = SetupPreset.SERVER;
     public boolean manualTuning = false;
-    public int replantDelayTicks = 5;
-    public int auraCooldownTicks = 20;
+    public int replantDelayTicks = 3;
+    public int auraCooldownTicks = 10;
     public int riskBatchSize = 1;
     public boolean autoRefillSeeds = true;
     public boolean rememberMissedReplants = true;
-    public int missedReplantRetryCooldownTicks = 40;
+    public int missedReplantRetryCooldownTicks = 20;
     public boolean fillEmptyFarmland = false;
 
     public void applyPreset(SetupPreset preset) {
         switch (preset) {
             case SERVER -> {
                 harvestMode = HarvestMode.HARVEST_RISKY;
-                replantDelayTicks = 5;
-                auraCooldownTicks = 20;
+                replantDelayTicks = 3;
+                auraCooldownTicks = 10;
                 riskBatchSize = 1;
                 rememberMissedReplants = true;
-                missedReplantRetryCooldownTicks = 40;
+                missedReplantRetryCooldownTicks = 20;
             }
             case MAX -> {
                 harvestMode = HarvestMode.HARVEST_RISKY;
@@ -109,6 +109,15 @@ public class AutoCropConfig implements ConfigData {
         if (harvestMode == null) harvestMode = HarvestMode.MANUAL;
         if (setupPreset == null) setupPreset = SetupPreset.SERVER;
         if (resumeMode == null || resumeMode == HarvestMode.DISABLED) resumeMode = HarvestMode.MANUAL;
+        // Upgrade only the exact old Server preset; preserve manual/custom values.
+        HarvestMode effectiveMode = harvestMode == HarvestMode.DISABLED ? resumeMode : harvestMode;
+        if (!manualTuning && setupPreset == SetupPreset.SERVER && effectiveMode == HarvestMode.HARVEST_RISKY
+            && replantDelayTicks == 5 && auraCooldownTicks == 20 && riskBatchSize == 1
+            && rememberMissedReplants && missedReplantRetryCooldownTicks == 40 && !fillEmptyFarmland) {
+            replantDelayTicks = 3;
+            auraCooldownTicks = 10;
+            missedReplantRetryCooldownTicks = 20;
+        }
         replantDelayTicks = Math.clamp(replantDelayTicks, 0, 10);
         auraCooldownTicks = Math.clamp(auraCooldownTicks, 1, 20);
         riskBatchSize = Math.clamp(riskBatchSize, 1, 32);

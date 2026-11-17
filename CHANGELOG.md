@@ -13,11 +13,15 @@
 - Plain-language mode names in the settings screen.
 
 ### Changed
+- Faster Server (safe) preset: 10-tick harvest cooldown, 3-tick replant delay, and 20-tick missed-spot retries; still one crop per batch. Existing untuned Server settings migrate automatically.
 - Updated to Gradle 9.9.1, Loom 1.19.4, Fabric Loader 0.20.1, and current stable target-specific dependencies.
 - Draft releases build fixed source commits, use the requested release version, and include checksums, source provenance, and every commit since the previous published release.
 - Active release builds cover 26.1, 26.2, 26.3, and 1.21.11; historical version branches remain available separately.
 
 ### Fixed
+- Lost replants during rapid manual breaking, including breaks made while automatic harvesting is enabled or before the first client tick.
+- Manual replanting now retries remembered spots after missing seeds, moving out of reach, delayed breaks, and temporary block obstructions.
+- Recent predicted placements are checked for 20 ticks so server rollbacks can return the exact position and seed to recovery.
 - Out-of-range timing/batch values and unknown modes loaded from configuration files.
 - Automatic harvest batch limits in 26.x.
 - Pending work leaking across world/player changes and disconnects.

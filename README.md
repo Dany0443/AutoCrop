@@ -21,7 +21,7 @@ Active support covers **Minecraft 26.1, 26.2, 26.3, and 1.21.11**. All four jars
 | Mode | What it does |
 |---|---|
 | **Max** | Fastest available automatic timing and largest harvest batches. |
-| **Server (safe)** | Slower automatic harvesting: one crop per batch, with longer waits between actions. |
+| **Server (safe)** | Automatic harvesting in single-crop batches, with a 10-tick harvest cooldown and a 3-tick replant delay. |
 
 Both modes automatically harvest and replant. Server (safe) is the conservative preset; it is not a guarantee that a server allows the mod or its automation. Neither preset plants unrelated empty plots.
 
@@ -29,13 +29,15 @@ The main menu also has an **Enable AutoCrop** switch, **Refill seeds for me**, a
 
 Manual settings let you choose automatic harvesting or replant-only behavior, then adjust replant delay, harvest interval, batch size, missed-replant recovery, retry timing, and empty-plot planting. Turn Manual tuning off to return to the selected Max or Server preset.
 
+Missed-replant recovery works in both automatic and manual replanting modes. It remembers the exact broken position and its seed while you collect seeds, move back into reach, or remove a temporary obstruction. Recent placements are watched for 20 ticks (normally one second) to catch server rollbacks. Records are limited to 2,048 missed spots and cleared when you disable the mod, change behavior, disconnect, or change worlds.
+
 Changes apply only when you save; cancelling leaves live settings unchanged. Existing configurations that do not match a preset automatically open with Manual tuning enabled, preserving their values. Turning AutoCrop off remembers the previous behavior and tuning for when you enable it again.
 
-The mode-cycle keybind still cycles Off → replant-only → automatic. Replant-only behavior only attempts to replant crops you break yourself and does not retain failed replants.
+The mode-cycle keybind still cycles Off → replant-only → automatic. Replant-only behavior replants crops you break yourself, including retries when Remember missed replants is enabled.
 
 **Auto-refill seeds** can swap seeds from your main inventory into the hotbar. It prefers an empty slot; if the hotbar is full, it swaps with the selected slot and moves that item into your inventory.
 
-**Remember missed replants** retries failed replants in automatic mode. Turning it off clears remembered positions. Queues are also cleared when changing modes, worlds, player sessions, or disconnecting.
+**Remember missed replants** retries failed replants in both manual and automatic modes. Turning it off clears remembered positions. Queues are also cleared when changing modes, worlds, player sessions, or disconnecting.
 
 **Fill empty farm plots** is a separate option, **off by default**. With automatic mode and remembered replants enabled, it also plants unrelated empty farmland based on neighboring crops, or plants nether wart on empty soul sand. It can fill deliberately empty plots and change mixed-crop layouts.
 

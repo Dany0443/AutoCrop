@@ -53,4 +53,42 @@ class AutoCropConfigTest {
         config.validatePostLoad();
         assertEquals(AutoCropConfig.HarvestMode.MANUAL, config.harvestMode);
     }
+    @Test
+    void serverPresetHasShorterWaitsButStillOnlyBreaksOneCropAtATime() {
+        AutoCropConfig config = new AutoCropConfig();
+        config.applyPreset(AutoCropConfig.SetupPreset.SERVER);
+        assertEquals(3, config.replantDelayTicks);
+        assertEquals(10, config.auraCooldownTicks);
+        assertEquals(20, config.missedReplantRetryCooldownTicks);
+        assertEquals(1, config.riskBatchSize);
+    }
+
+    @Test
+    void oldUntunedServerPresetGetsFasterWithoutReenablingDisabledMod() {
+        AutoCropConfig config = oldServerConfig();
+        config.harvestMode = AutoCropConfig.HarvestMode.DISABLED;
+        config.validatePostLoad();
+        assertEquals(AutoCropConfig.HarvestMode.DISABLED, config.harvestMode);
+        assertEquals(AutoCropConfig.SetupPreset.SERVER, config.matchingPreset());
+        assertEquals(10, config.auraCooldownTicks);
+    }
+
+    @Test
+    void oldServerTimingsArePreservedWhenManualTuningIsOn() {
+        AutoCropConfig config = oldServerConfig();
+        config.manualTuning = true;
+        config.validatePostLoad();
+        assertEquals(20, config.auraCooldownTicks);
+        assertEquals(5, config.replantDelayTicks);
+        assertEquals(40, config.missedReplantRetryCooldownTicks);
+    }
+
+    private AutoCropConfig oldServerConfig() {
+        AutoCropConfig config = new AutoCropConfig();
+        config.replantDelayTicks = 5;
+        config.auraCooldownTicks = 20;
+        config.missedReplantRetryCooldownTicks = 40;
+        return config;
+    }
+
 }
