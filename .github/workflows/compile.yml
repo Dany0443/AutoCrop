@@ -1,0 +1,55 @@
+name: Compile Minecraft targets
+
+on:
+  workflow_call:
+    inputs:
+      targets:
+        description: JSON array of Minecraft versions
+        required: true
+        type: string
+      ref:
+        description: Immutable source commit (empty uses the triggering revision)
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    name: Minecraft ${{ matrix.minecraft }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        minecraft: ${{ fromJSON(inputs.targets) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          java-version: '25'
+          distribution: temurin
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Test and compile
+        env:
+          MINECRAFT_TARGET: ${{ matrix.minecraft }}
+        run: ./gradlew build --no-daemon "-Pminecraft_target=$MINECRAFT_TARGET"
+      - name: Upload mod jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: autocrop-mc${{ matrix.minecraft }}
+          path: |
+            build/${{ matrix.minecraft }}/libs/*.jar
+            !build/${{ matrix.minecraft }}/libs/*-sources.jar
+          if-no-files-found: error
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports-mc${{ matrix.minecraft }}
+          path: build/${{ matrix.minecraft }}/reports/tests/
+          if-no-files-found: ignore
