@@ -10,7 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -297,7 +296,7 @@ public final class CropManager {
 
         Inventory inv = player.getInventory();
         previousSlot  = inv.getSelectedSlot();
-        inv.selected  = seedSlot;
+        inv.setSelectedSlot(seedSlot);
 
         BlockPos       farmland = replant.pos().below();
         Vec3           hitVec   = Vec3.atCenterOf(farmland).add(0, 0.5, 0);
@@ -307,7 +306,7 @@ public final class CropManager {
         MinecraftCompat.swing(player);
 
         if (previousSlot >= 0 && previousSlot != seedSlot) {
-            inv.selected = previousSlot;
+            inv.setSelectedSlot(previousSlot);
         }
         previousSlot = -1;
 
@@ -391,13 +390,7 @@ public final class CropManager {
         }
         if (targetHotbar == -1) targetHotbar = inv.getSelectedSlot();
 
-        client.gameMode.handleContainerInput(
-            player.inventoryMenu.containerId,
-            invSlot,
-            targetHotbar,
-            ContainerInput.SWAP,
-            player
-        );
+        MinecraftCompat.swapInventory(client, invSlot, targetHotbar);
 
         return targetHotbar;
     }
