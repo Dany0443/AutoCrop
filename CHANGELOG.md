@@ -15,7 +15,7 @@
 
 ### Changed
 - Main now contains only the latest Minecraft target. Active version branches carry their own tested implementation, and automatic/manual builds and draft releases compile each selected version from its own pinned branch commit.
-- Release notes include version-branch commits, and RELEASE_SOURCES.json records exactly which branch commits produced each jar.
+- Release notes include version-branch commits and source links in the release description. Release attachments contain only playable mod jars and SHA256SUMS.txt; draft updates remove old notes and source metadata attachments.
 - New configurations and menu reset defaults use Max with Manual tuning off. Existing saved choices are preserved.
 - Faster Server (safe) preset: 10-tick harvest cooldown, 3-tick replant delay, and 20-tick missed-spot retries; still one crop per batch. Existing untuned Server settings migrate automatically.
 - Updated to Gradle 9.9.1, Loom 1.19.4, Fabric Loader 0.20.1, and current stable target-specific dependencies.

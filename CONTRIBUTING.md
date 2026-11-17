@@ -41,4 +41,4 @@ Record Minecraft version, dependency versions, settings, and results in the comm
 
 ## CI and releases
 
-See README for smart selection, manual version selection, artifacts, and draft releases with per-version source manifests. Use **Build result** as the required CI check. Drafts are reviewed and published manually.
+See README for smart selection, manual version selection, artifacts, and draft releases with per-version source links in the release description. Use **Build result** as the required CI check. Drafts are reviewed and published manually.

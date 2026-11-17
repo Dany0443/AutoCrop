@@ -5,9 +5,10 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 from urllib.parse import quote
 
-from select_build_targets import parse_versions
+from select_build_targets import SUPPORTED, parse_versions
 from branch_sources import resolve_sources
 
 
@@ -99,12 +100,22 @@ def github_releases(repository):
 
 def previous_branch_sources(repository, releases, tag):
     release = next((r for r in releases if r['tag_name'] == tag), {})
-    asset = next((a for a in release.get('assets', []) if a['name'] == 'RELEASE_SOURCES.json'), None)
-    if asset is None:
-        return None  # Older releases have only the release tag as their baseline.
-    manifest = json.loads(subprocess.check_output(
-        ['gh', 'api', '-H', 'Accept: application/octet-stream',
-         f"repos/{repository}/releases/assets/{int(asset['id'])}"], text=True))
+    # Source links in the release body preserve branch baselines without attachments.
+    pattern = (rf'^- Minecraft ([0-9.]+): `\1` at \[[0-9a-f]{{12}}\]'
+               rf'\(https://github.com/{re.escape(repository)}/commit/([0-9a-f]{{40}})\)$')
+    sources = [{'minecraft': version, 'branch': version, 'ref': sha}
+               for version, sha in re.findall(pattern, release.get('body') or '', re.MULTILINE)
+               if version in SUPPORTED]
+    if sources:
+        manifest = {'include': sources}
+    else:
+        # Read old manifests for compatibility, but never upload new ones.
+        asset = next((a for a in release.get('assets', []) if a['name'] == 'RELEASE_SOURCES.json'), None)
+        if asset is None:
+            return None
+        manifest = json.loads(subprocess.check_output(
+            ['gh', 'api', '-H', 'Accept: application/octet-stream',
+             f"repos/{repository}/releases/assets/{int(asset['id'])}"], text=True))
     for source in manifest['include']:
         if not re.fullmatch(r'[0-9a-f]{40}', source['ref']):
             raise ValueError('Invalid commit in previous release source manifest')
@@ -141,24 +152,31 @@ def main():
         releases = github_releases(repository)
         existing = require_unpublished(releases, tag)
         previous = previous_release(releases, tag, commit, os.environ.get('PREVIOUS_RELEASE', '').strip())
-        notes = Path('release_artifacts/RELEASE_NOTES.md')
         sources = json.loads(os.environ.get('VERSION_SOURCES', 'null'))
         baseline_sources = previous_branch_sources(repository, releases, previous) if previous else None
-        notes.write_text(release_notes(repository, tag, commit, targets, previous, sources, baseline_sources))
-        if existing:
-            subprocess.run(['gh', 'release', 'edit', tag, '--repo', repository,
-                            '--title', f'AutoCrop {tag}', '--notes-file', str(notes), '--target', commit], check=True)
-        else:
-            subprocess.run(['gh', 'release', 'create', tag, '--repo', repository, '--draft',
-                            '--title', f'AutoCrop {tag}', '--notes-file', str(notes), '--target', commit], check=True)
-        assets = sorted(p for p in Path('release_artifacts').iterdir() if p.is_file())
+        # Only playable mod jars and checksums are release attachments.
+        assets = sorted(p for p in Path('release_artifacts').iterdir()
+                        if p.is_file() and (p.name == 'SHA256SUMS.txt'
+                            or (p.name.startswith('autocrop-') and p.name.endswith('.jar')
+                                and not p.name.endswith(('-sources.jar', '-dev.jar')))))
+        with tempfile.TemporaryDirectory(prefix='autocrop-release-') as directory:
+            notes = Path(directory, 'notes.md')
+            notes.write_text(release_notes(repository, tag, commit, targets, previous, sources, baseline_sources))
+            if existing:
+                subprocess.run(['gh', 'release', 'edit', tag, '--repo', repository,
+                                '--title', f'AutoCrop {tag}', '--notes-file', str(notes), '--target', commit], check=True)
+            else:
+                subprocess.run(['gh', 'release', 'create', tag, '--repo', repository, '--draft',
+                                '--title', f'AutoCrop {tag}', '--notes-file', str(notes), '--target', commit], check=True)
         subprocess.run(['gh', 'release', 'upload', tag, '--repo', repository, '--clobber',
                         *(str(p) for p in assets)], check=True)
-        # A rerun with a different version list must not leave jars from the old selection.
+        # Remove the old metadata attachments and jars from previous version selections.
         current_names = {p.name for p in assets}
         for asset in (existing or {}).get('assets', []):
             name = asset['name']
-            if name.startswith('autocrop-') and name.endswith('.jar') and name not in current_names:
+            obsolete_metadata = name in {'RELEASE_NOTES.md', 'RELEASE_SOURCES.json', 'SOURCE_COMMIT.txt'}
+            obsolete_jar = name.startswith('autocrop-') and name.endswith('.jar') and name not in current_names
+            if obsolete_metadata or obsolete_jar:
                 subprocess.run(['gh', 'release', 'delete-asset', tag, name, '--repo', repository, '--yes'], check=True)
 
 

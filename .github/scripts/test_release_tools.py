@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 import unittest
 
-from release_tools import previous_release, release_notes, release_source, require_unpublished
+from release_tools import previous_release, release_notes, release_source, require_unpublished, previous_branch_sources
 
 
 SCRIPT = Path(__file__).with_name('release_tools.py').resolve()
@@ -105,10 +105,13 @@ class ReleaseNotesTest(unittest.TestCase):
             release_source('v1.5.0\ncommit=wrong', self.head)
 
 
-    def run_draft_workflow(self, existing=None):
+    def run_draft_workflow(self, existing=None, stale_metadata=False):
         Path('release_artifacts').mkdir()
         Path('release_artifacts/autocrop-1.5.0-mc26.3.jar').write_bytes(b'test jar')
         Path('release_artifacts/SHA256SUMS.txt').write_text('test checksum')
+        if stale_metadata:
+            for name in ['RELEASE_NOTES.md', 'RELEASE_SOURCES.json', 'SOURCE_COMMIT.txt']:
+                Path('release_artifacts', name).write_text('old metadata')
         Path('tools').mkdir()
         helper = Path('tools/gh')
         helper.write_text("""#!/usr/bin/env python3
@@ -118,6 +121,9 @@ with Path(os.environ['CALL_LOG']).open('a') as log:
     log.write(json.dumps(sys.argv[1:]) + '\\n')
 if sys.argv[1] == 'api':
     print(os.environ['MOCK_RELEASES'])
+if sys.argv[1:3] in [['release', 'create'], ['release', 'edit']]:
+    notes = Path(sys.argv[sys.argv.index('--notes-file') + 1])
+    Path('captured_notes.md').write_text(notes.read_text())
 """)
         helper.chmod(0o755)
         releases = [self.release()]
@@ -139,9 +145,34 @@ if sys.argv[1] == 'api':
         self.assertEqual(create[create.index('--target') + 1], self.head)
         upload = next(call for call in calls if call[:2] == ['release', 'upload'])
         self.assertIn('release_artifacts/autocrop-1.5.0-mc26.3.jar', upload)
-        notes = Path('release_artifacts/RELEASE_NOTES.md').read_text()
+        notes = Path('captured_notes.md').read_text()
         self.assertIn('setting without a pull request', notes)
         self.assertNotIn('Initial commit', notes)
+
+    def test_only_jars_and_checksums_are_uploaded_even_if_metadata_files_are_present(self):
+        result, calls = self.run_draft_workflow(stale_metadata=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        upload = next(call for call in calls if call[:2] == ['release', 'upload'])
+        files = {arg for arg in upload if arg.startswith('release_artifacts/')}
+        self.assertEqual(files, {'release_artifacts/autocrop-1.5.0-mc26.3.jar', 'release_artifacts/SHA256SUMS.txt'})
+        create = next(call for call in calls if call[:2] == ['release', 'create'])
+        notes_path = Path(create[create.index('--notes-file') + 1])
+        self.assertFalse(notes_path.exists(), 'Temporary release notes must be cleaned up')
+
+    def test_draft_rerun_removes_all_three_old_metadata_attachments(self):
+        existing = self.release('v1.5.0', True)
+        removed = ['RELEASE_NOTES.md', 'RELEASE_SOURCES.json', 'SOURCE_COMMIT.txt']
+        existing['assets'] = [{'name': name} for name in removed + ['custom-file.jar']]
+        result, calls = self.run_draft_workflow(existing)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        deleted = [call[3] for call in calls if call[:2] == ['release', 'delete-asset']]
+        self.assertEqual(deleted, removed)
+
+    def test_previous_version_sources_are_read_from_release_body_without_attachments(self):
+        sources = {'include': [{'minecraft': '26.3', 'branch': '26.3', 'ref': self.base}]}
+        previous = self.release()
+        previous['body'] = release_notes('owner/repo', 'v1.4', self.base, ['26.3'], sources=sources)
+        self.assertEqual(previous_branch_sources('owner/repo', [previous], 'v1.4'), sources)
 
     def test_draft_rerun_updates_notes_and_removes_only_obsolete_mod_jars(self):
         existing = self.release('v1.5.0', True)
