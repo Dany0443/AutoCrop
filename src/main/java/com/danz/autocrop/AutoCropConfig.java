@@ -44,6 +44,15 @@ public class AutoCropConfig implements ConfigData {
     // Existing config files also default to leaving unrelated empty plots alone.
     public boolean fillEmptyFarmland = false;
 
+    @Override
+    public void validatePostLoad() {
+        if (harvestMode == null) harvestMode = HarvestMode.MANUAL;
+        replantDelayTicks = Math.clamp(replantDelayTicks, 0, 10);
+        auraCooldownTicks = Math.clamp(auraCooldownTicks, 1, 20);
+        riskBatchSize = Math.clamp(riskBatchSize, 1, 32);
+        missedReplantRetryCooldownTicks = Math.clamp(missedReplantRetryCooldownTicks, 1, 200);
+    }
+
     public static void register() {
         AutoConfig.register(AutoCropConfig.class, GsonConfigSerializer::new);
     }

@@ -38,6 +38,8 @@ public class ModMenuIntegration implements ModMenuApi {
                     cfg.harvestMode
                 )
                 .setDefaultValue(AutoCropConfig.HarvestMode.MANUAL)
+                .setEnumNameProvider(mode -> Component.translatable(
+                    ((AutoCropConfig.HarvestMode) mode).translationKey() + ".label"))
                 .setTooltip(Component.translatable("config.autocrop.option.harvestMode.tooltip"))
                 .setSaveConsumer(v -> cfg.harvestMode = v)
                 .build()
