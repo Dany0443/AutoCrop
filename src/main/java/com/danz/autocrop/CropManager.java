@@ -10,7 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -55,21 +54,30 @@ public final class CropManager {
 
     private final Set<BlockPos> breaksSentThisSweep = new HashSet<>();
 
+    // Keep predicted placements until they have survived a server-update window.
+    private final Map<PendingReplant, Long> unconfirmedPlacements = new HashMap<>();
+
+    private Level activeLevel;
+    private Player activePlayer;
+    private AutoCropConfig.HarvestMode previousMode;
+
     private int delayTimer   = 0;
     private int auraTimer    = 0;
     private int previousSlot = -1;
     private long tickCounter = 0;
     private static final double MAX_ACTION_REACH = 4.5D;
     private static final int MAX_REMEMBERED_REPLANTS = 2048;
+    private static final int PLACEMENT_CONFIRMATION_TICKS = 20;
 
     private CropManager() {}
 
     public void onEndTick(Minecraft client) {
+        AutoCropConfig cfg = AutoCropConfig.get();
+        synchronizeContext(client.level, client.player, cfg);
         if (client.player == null || client.level == null || client.gameMode == null) return;
 
         tickCounter++;
-
-        AutoCropConfig cfg = AutoCropConfig.get();
+        if (!cfg.rememberMissedReplants) clearRememberedReplants();
 
         if (AutoCropMod.keyCycleMode.consumeClick()) {
             cycleMode(client, cfg);
@@ -82,9 +90,12 @@ public final class CropManager {
             return;
         }
 
+        checkUnconfirmedPlacements(client, cfg);
         if (cfg.harvestMode == AutoCropConfig.HarvestMode.HARVEST_RISKY) {
             scanForUntrackedHoles(client, cfg);
-            retryMissedReplants(client, cfg);
+        }
+        retryMissedReplants(client, cfg);
+        if (cfg.harvestMode == AutoCropConfig.HarvestMode.HARVEST_RISKY) {
             tickRiskyAura(client, cfg);
         }
 
@@ -103,7 +114,10 @@ public final class CropManager {
     }
 
     public void onBlockAttack(Player player, Level level, BlockPos pos) {
-        if (AutoCropConfig.get().harvestMode != AutoCropConfig.HarvestMode.MANUAL) return;
+        AutoCropConfig cfg = AutoCropConfig.get();
+        // An attack may arrive before END_CLIENT_TICK observes a new world or mode.
+        synchronizeContext(level, player, cfg);
+        if (cfg.harvestMode == AutoCropConfig.HarvestMode.DISABLED) return;
 
         BlockState state = level.getBlockState(pos);
         if (!(state.getBlock() instanceof CropBlock crop) || !crop.isMaxAge(state)) return;
@@ -112,17 +126,43 @@ public final class CropManager {
             .ifPresent(seed -> enqueueReplant(new PendingReplant(pos.immutable(), seed)));
     }
 
+    private void synchronizeContext(Level level, Player player, AutoCropConfig cfg) {
+        // Never carry positions across sessions, but initialize before accepting attacks.
+        if (level != activeLevel || player != activePlayer || cfg.harvestMode != previousMode) {
+            resetAutomation();
+            activeLevel = level;
+            activePlayer = player;
+            previousMode = cfg.harvestMode;
+        }
+    }
+
+    private void checkUnconfirmedPlacements(Minecraft client, AutoCropConfig cfg) {
+        Iterator<Map.Entry<PendingReplant, Long>> it = unconfirmedPlacements.entrySet().iterator();
+        while (it.hasNext()) {
+            var placement = it.next();
+            PendingReplant replant = placement.getKey();
+            if (isPlantedCrop(client.level.getBlockState(replant.pos()))) {
+                if (tickCounter >= placement.getValue()) {
+                    it.remove();
+                    clearRemembered(replant);
+                }
+            } else {
+                // Prediction was rejected, rolled back, or the player broke it again.
+                it.remove();
+                rememberForRetry(replant, cfg);
+            }
+        }
+    }
+
     private void cycleMode(Minecraft client, AutoCropConfig cfg) {
         AutoCropConfig.HarvestMode next = cfg.harvestMode.next();
+        cfg.resumeMode = next == AutoCropConfig.HarvestMode.DISABLED ? cfg.harvestMode : next;
         cfg.harvestMode = next;
 
         AutoConfig.getConfigHolder(AutoCropConfig.class).save();
 
-        clearQueue();
-        machineState = MachineState.IDLE;
-        if (next != AutoCropConfig.HarvestMode.HARVEST_RISKY) {
-            clearRememberedReplants();
-        }
+        resetAutomation();
+        previousMode = next;
 
         showOverlayMessage(client, Component.translatable(next.translationKey()));
     }
@@ -179,82 +219,72 @@ public final class CropManager {
             if (!isWithinActionReach(player, immutablePos)) continue;
 
             client.gameMode.startDestroyBlock(immutablePos, Direction.UP);
-            client.gameMode.destroyBlock(immutablePos);
+            MinecraftCompat.swing(player);
             breaksSentThisSweep.add(immutablePos);
-
             enqueueReplant(new PendingReplant(immutablePos, maybeSeed.get()));
-
             found++;
-            if (found >= cfg.riskBatchSize) break;
+            if (found >= Math.max(1, cfg.riskBatchSize)) break;
         }
 
-        if (found > 0) {
-            auraTimer = cfg.auraCooldownTicks;
-        }
+        if (found > 0) auraTimer = cfg.auraCooldownTicks;
     }
 
     private void retryMissedReplants(Minecraft client, AutoCropConfig cfg) {
         if (!cfg.rememberMissedReplants || missedReplants.isEmpty()) return;
-        if (machineState != MachineState.IDLE || !queue.isEmpty()) return;
 
         LocalPlayer player = client.player;
         ClientLevel level  = client.level;
-        int limit = Math.max(1, cfg.riskBatchSize);
-        int queuedCount = 0;
-
         Iterator<PendingReplant> it = missedReplants.iterator();
-        while (it.hasNext() && queuedCount < limit) {
-            PendingReplant replant = it.next();
 
-            if (!isWithinActionReach(player, replant.pos())) continue;
+        while (it.hasNext()) {
+            if (queue.size() >= Math.max(1, cfg.riskBatchSize)) break;
 
-            BlockState current = level.getBlockState(replant.pos());
+            PendingReplant missed = it.next();
+            if (!canRetryNow(missed)) continue;
+
+            BlockState current = level.getBlockState(missed.pos());
             if (isPlantedCrop(current)) {
                 it.remove();
-                missedRetryAfterTick.remove(replant);
+                missedRetryAfterTick.remove(missed);
                 continue;
             }
 
-            if (!current.isAir()) continue;
-
-            BlockState below = level.getBlockState(replant.pos().below());
-            if (!isValidFarmlandForSeed(below, replant.seed())) continue;
-
-            if (!canRetryNow(replant)) continue;
-
-            if (!hasSeedAvailable(player, cfg, replant.seed())) {
-                scheduleRetry(replant, cfg);
+            if (!current.isAir()) {
+                // A delayed break or a temporary obstruction must not erase the spot.
+                scheduleRetry(missed, cfg);
                 continue;
             }
 
-            if (enqueueReplant(replant)) {
-                queuedCount++;
+            if (!isWithinActionReach(player, missed.pos())) {
+                scheduleRetry(missed, cfg);
+                continue;
+            }
+
+            if (!hasSeedAvailable(player, cfg, missed.seed())) {
+                scheduleRetry(missed, cfg);
+                continue;
+            }
+
+            if (enqueueReplant(missed)) {
                 it.remove();
-                missedRetryAfterTick.remove(replant);
+                missedRetryAfterTick.remove(missed);
+            } else {
+                scheduleRetry(missed, cfg);
             }
         }
-    }
-
-    private boolean isValidFarmlandForSeed(BlockState belowState, Item seed) {
-        if (seed == Items.NETHER_WART) {
-            return belowState.is(Blocks.SOUL_SAND);
-        }
-        return belowState.is(Blocks.FARMLAND);
     }
 
     private void executeNextReplant(Minecraft client, AutoCropConfig cfg) {
+        if (queue.isEmpty()) { machineState = MachineState.IDLE; return; }
+
         PendingReplant replant = queue.poll();
-        if (replant == null) {
-            machineState = MachineState.IDLE;
-            return;
-        }
+        if (replant == null) { machineState = MachineState.IDLE; return; }
         queuedPositions.remove(replant.pos());
 
         LocalPlayer player = client.player;
         ClientLevel level  = client.level;
 
         BlockState current = level.getBlockState(replant.pos());
-
         if (isPlantedCrop(current)) {
             clearRemembered(replant);
             advanceState(cfg);
@@ -262,15 +292,7 @@ public final class CropManager {
         }
 
         if (!current.isAir()) {
-            advanceState(cfg);
-            return;
-        }
-
-        BlockState below = level.getBlockState(replant.pos().below());
-        if (!isValidFarmlandForSeed(below, replant.seed())) {
-            if (below.isAir()) {
-                clearRemembered(replant);
-            }
+            rememberForRetry(replant, cfg);
             advanceState(cfg);
             return;
         }
@@ -293,33 +315,31 @@ public final class CropManager {
         }
 
         Inventory inv = player.getInventory();
-        previousSlot = getSelectedSlot(inv);
-        setSelectedSlot(inv, seedSlot);
+        previousSlot  = inv.getSelectedSlot();
+        inv.setSelectedSlot(seedSlot);
 
         BlockPos       farmland = replant.pos().below();
         Vec3           hitVec   = Vec3.atCenterOf(farmland).add(0, 0.5, 0);
         BlockHitResult hit      = new BlockHitResult(hitVec, Direction.UP, farmland, false);
 
         client.gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit);
-        player.swing(InteractionHand.MAIN_HAND);
+        MinecraftCompat.swing(player);
 
         if (previousSlot >= 0 && previousSlot != seedSlot) {
-            setSelectedSlot(inv, previousSlot);
+            inv.setSelectedSlot(previousSlot);
         }
         previousSlot = -1;
 
-        BlockState afterState = level.getBlockState(replant.pos());
-        if (isPlantedCrop(afterState)) {
+        if (cfg.rememberMissedReplants) {
             clearRemembered(replant);
-        } else {
-            rememberForRetry(replant, cfg);
+            unconfirmedPlacements.put(replant, tickCounter + PLACEMENT_CONFIRMATION_TICKS);
         }
 
         advanceState(cfg);
     }
 
     private void scanForUntrackedHoles(Minecraft client, AutoCropConfig cfg) {
-        if (!cfg.rememberMissedReplants) return;
+        if (!cfg.fillEmptyFarmland || !cfg.rememberMissedReplants) return;
         if (queue.size() >= Math.max(1, cfg.riskBatchSize)) return;
 
         LocalPlayer player = client.player;
@@ -377,8 +397,8 @@ public final class CropManager {
     }
 
     private int swapSeedFromInventory(Minecraft client, Item seed) {
-        LocalPlayer player  = client.player;
-        int         invSlot = findSeedInInventory(player, seed);
+        LocalPlayer player      = client.player;
+        int         invSlot     = findSeedInInventory(player, seed);
         if (invSlot == -1) return -1;
 
         Inventory inv          = player.getInventory();
@@ -386,61 +406,29 @@ public final class CropManager {
         for (int i = 0; i < 9; i++) {
             if (inv.getItem(i).isEmpty()) { targetHotbar = i; break; }
         }
-        if (targetHotbar == -1) targetHotbar = getSelectedSlot(inv);
+        if (targetHotbar == -1) targetHotbar = inv.getSelectedSlot();
 
-        client.gameMode.handleInventoryMouseClick(
-            player.inventoryMenu.containerId,
-            invSlot,
-            targetHotbar,
-            ClickType.SWAP,
-            player
-        );
+        MinecraftCompat.swapInventory(client, invSlot, targetHotbar);
 
         return targetHotbar;
     }
 
-    private static int getSelectedSlot(Inventory inv) {
-        try {
-            java.lang.reflect.Method m = inv.getClass().getMethod("getSelectedSlot");
-            return (int) m.invoke(inv);
-        } catch (Exception ignored) {
-            try {
-                java.lang.reflect.Field f = inv.getClass().getField("selected");
-                return f.getInt(inv);
-            } catch (Exception e) {
-                try {
-                    java.lang.reflect.Field f = inv.getClass().getDeclaredField("selected");
-                    f.setAccessible(true);
-                    return f.getInt(inv);
-                } catch (Exception ex) {
-                    return 0;
-                }
-            }
-        }
-    }
-
-    private static void setSelectedSlot(Inventory inv, int slot) {
-        try {
-            java.lang.reflect.Method m = inv.getClass().getMethod("setSelectedSlot", int.class);
-            m.invoke(inv, slot);
-        } catch (Exception ignored) {
-            try {
-                java.lang.reflect.Field f = inv.getClass().getField("selected");
-                f.setInt(inv, slot);
-            } catch (Exception e) {
-                try {
-                    java.lang.reflect.Field f = inv.getClass().getDeclaredField("selected");
-                    f.setAccessible(true);
-                    f.setInt(inv, slot);
-                } catch (Exception ignored2) {}
-            }
-        }
-    }
-
     private boolean enqueueReplant(PendingReplant replant) {
+        if (unconfirmedPlacements.containsKey(replant)) return false;
         if (!queuedPositions.add(replant.pos())) return false;
         queue.add(replant);
         return true;
+    }
+
+    private void resetAutomation() {
+        clearQueue();
+        clearRememberedReplants();
+        breaksSentThisSweep.clear();
+        machineState = MachineState.IDLE;
+        delayTimer = 0;
+        auraTimer = 0;
+        previousSlot = -1;
+        tickCounter = 0;
     }
 
     private void clearQueue() {
@@ -449,6 +437,7 @@ public final class CropManager {
     }
 
     private void clearRememberedReplants() {
+        unconfirmedPlacements.clear();
         missedReplants.clear();
         missedRetryAfterTick.clear();
     }
@@ -475,7 +464,7 @@ public final class CropManager {
     }
 
     private void rememberForRetry(PendingReplant replant, AutoCropConfig cfg) {
-        if (cfg.harvestMode != AutoCropConfig.HarvestMode.HARVEST_RISKY
+        if (cfg.harvestMode == AutoCropConfig.HarvestMode.DISABLED
             || !cfg.rememberMissedReplants) {
             return;
         }

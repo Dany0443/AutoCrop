@@ -1,7 +1,24 @@
 plugins {
-    id "net.fabricmc.fabric-loom-remap" version "1.15.1"
+    id "net.fabricmc.fabric-loom" version "${loom_version}" apply false
     id "maven-publish"
 }
+
+def target = providers.gradleProperty("minecraft_target").get()
+if (!(target in ["26.1", "26.2", "26.3", "1.21.11"])) {
+    throw new GradleException("Unsupported minecraft_target '${target}'. Choose 26.1, 26.2, 26.3 or 1.21.11.")
+}
+if (!file("versions/${target}.properties").isFile()) {
+    throw new GradleException("This branch does not contain Minecraft ${target}. Check out its version branch before building.")
+}
+def remappedTarget = target == "1.21.11"
+apply plugin: remappedTarget ? "net.fabricmc.fabric-loom-remap" : "net.fabricmc.fabric-loom"
+def targetProperties = new Properties()
+file("versions/${target}.properties").withInputStream { targetProperties.load(it) }
+targetProperties.each { key, value -> project.ext.set(key.toString(), value) }
+
+// Separate outputs prevent stale jars/resources when switching Minecraft targets.
+layout.buildDirectory = layout.projectDirectory.dir("build/${target}")
+sourceSets.main.java.srcDir("src/minecraft${target}/java")
 
 version = "${project.mod_version}-mc${project.minecraft_version}"
 group = project.maven_group
@@ -39,36 +56,41 @@ repositories {
     mavenCentral()
 }
 
-// dependencies
+// Mockito's explicit agent supports tests on Java 25 without dynamic attachment.
+configurations {
+    mockitoAgent { transitive = false }
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
 
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}"
-    modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+    if (remappedTarget) mappings loom.officialMojangMappings()
+    def modConfiguration = remappedTarget ? "modImplementation" : "implementation"
+    add(modConfiguration, "net.fabricmc:fabric-loader:${project.loader_version}")
+    add(modConfiguration, "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
+    add(modConfiguration, "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}")
+    add(modConfiguration, "com.terraformersmc:modmenu:${project.modmenu_version}")
+
+    testImplementation platform("org.junit:junit-bom:6.1.3")
+    testImplementation "org.junit.jupiter:junit-jupiter"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+    testImplementation "org.mockito:mockito-core:5.24.0"
+    mockitoAgent "org.mockito:mockito-core:5.24.0"
 }
 
+def resourceProperties = [
+    mod_version: project.mod_version,
+    minecraft_version: project.minecraft_version,
+    loader_version: project.loader_version,
+    fabric_version: project.fabric_version,
+    cloth_config_version: project.cloth_config_version,
+    modmenu_version: project.modmenu_version
+]
 processResources {
-    inputs.property("mod_version", project.mod_version)
-    inputs.property("minecraft_version", project.minecraft_version)
-    inputs.property("loader_version", project.loader_version)
-    inputs.property("java_version", "25")
-
+    inputs.properties(resourceProperties)
     filesMatching("fabric.mod.json") {
-        expand(
-            mod_version: project.mod_version,
-            minecraft_version: project.minecraft_version,
-            loader_version: project.loader_version,
-            java_version: "25"
-        )
+        expand(resourceProperties)
     }
-}
-
-loom {
-    accessWidenerPath = file("src/main/resources/autocrop.accesswidener")
-    enableTransitiveAccessWideners = false
 }
 
 jar {
@@ -87,3 +109,7 @@ publishing {
     }
 }
 
+test {
+    useJUnitPlatform()
+    jvmArgs("-javaagent:${configurations.mockitoAgent.singleFile}")
+}

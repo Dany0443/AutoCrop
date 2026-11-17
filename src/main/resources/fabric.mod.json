@@ -25,11 +25,11 @@
   },
   "depends": {
     "fabricloader": ">=${loader_version}",
-    "fabric-api": "*",
+    "fabric-api": ">=${fabric_version}",
     "minecraft": "~${minecraft_version}",
-    "java": ">=${java_version}",
-    "cloth-config": "*",
-    "modmenu": "*"
+    "java": ">=25",
+    "cloth-config": ">=${cloth_config_version}",
+    "modmenu": ">=${modmenu_version}"
   },
   "custom": {
     "modmenu": {
@@ -37,6 +37,5 @@
         "About me": "https://webjuniors.org/about/dan"
       }
     }
-  },
-  "accessWidener": "autocrop.accesswidener"
+  }
 }
