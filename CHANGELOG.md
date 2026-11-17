@@ -3,6 +3,9 @@
 ## 1.5.0-dev — Unreleased
 
 ### Added
+- Exactly two automatic harvest presets: Max and the slower Server (safe).
+- A Manual tuning switch that reveals a separate manual settings section and disables the preset selector.
+- Staged menu edits: cancelling does not affect live farming settings.
 - Shared builds for active Minecraft 26.1, 26.2, 26.3, and 1.21.11 targets, with separate output folders.
 - Automatic selection of affected Minecraft targets in CI and comma-separated manual version selection.
 - Regression tests for harvesting limits, world/session changes, mode changes, and remembered replants.

@@ -30,7 +30,7 @@ The Gradle wrapper distribution has a pinned SHA-256 checksum. Dependency versio
 
 Automated tests cannot prove live server acceptance or UI rendering. Before a public release, check all supported targets in-game:
 
-1. Open settings, change modes, save/cancel, and restore defaults.
+1. Check the two Max/Server (safe) presets, enabled/refill switches, conditional Manual settings menu, save/cancel, resume behavior, and defaults. Verify opening old custom configs preserves their values.
 2. Manually harvest and replant supported crops.
 3. Set automatic batch size to 1 and verify only one mature crop is harvested per batch.
 4. Exhaust seeds, replenish them, and verify remembered retries; then disable remembered retries and verify they stop.

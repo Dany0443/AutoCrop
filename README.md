@@ -9,16 +9,29 @@ Active support covers **Minecraft 26.1, 26.2, 26.3, and 1.21.11**. All four jars
 1. Choose the AutoCrop jar matching your Minecraft version from GitHub Releases. GitHub Actions also provides development jars under each successful build's **Artifacts** section.
 2. Install Fabric Loader **0.20.1 or newer**, Fabric API, Cloth Config, and ModMenu for that same Minecraft version. Use **Java 25**.
 3. Put the mod jars in your instance's `mods` folder and launch Minecraft.
-4. Open **Mods → AutoCrop → Configure** to choose your mode and settings.
+4. Open **Mods → AutoCrop → Configure**, choose a **Harvest mode**, then save.
 5. Optionally assign **Cycle Harvest Mode** under **Options → Controls → Key Binds → AutoCrop**. It starts unbound to avoid key conflicts.
 
-**Manual replanting is the default.** Keep the appropriate seeds, carrots, or potatoes in your hotbar or main inventory, then break a fully grown wheat, carrot, potato, or beetroot crop. AutoCrop attempts to replant it after the configured delay.
+**Server (safe) is the default preset.** Keep the appropriate seeds, carrots, or potatoes in your hotbar or main inventory. AutoCrop harvests and replants fully grown wheat, carrots, potatoes, and beetroot nearby.
 
-## Modes and settings
+## Harvest mode and Manual tuning
 
-- **Off:** AutoCrop performs no farming actions.
-- **Replant crops I break:** You harvest mature crops yourself; AutoCrop attempts to replant them. Automatic retries are not available in this mode.
-- **Automatic harvest (check server rules):** AutoCrop scans nearby mature crops, breaks up to the configured batch size, and queues replanting. Only enable it where server rules allow automation.
+**Harvest mode has exactly two choices:**
+
+| Mode | What it does |
+|---|---|
+| **Max** | Fastest available automatic timing and largest harvest batches. |
+| **Server (safe)** | Slower automatic harvesting: one crop per batch, with longer waits between actions. |
+
+Both modes automatically harvest and replant. Server (safe) is the conservative preset; it is not a guarantee that a server allows the mod or its automation. Neither preset plants unrelated empty plots.
+
+The main menu also has an **Enable AutoCrop** switch, **Refill seeds for me**, and **Manual tuning**. Turn **Manual tuning** on to reveal the **Manual settings** menu. The preset selector is disabled while manual tuning is active.
+
+Manual settings let you choose automatic harvesting or replant-only behavior, then adjust replant delay, harvest interval, batch size, missed-replant recovery, retry timing, and empty-plot planting. Turn Manual tuning off to return to the selected Max or Server preset.
+
+Changes apply only when you save; cancelling leaves live settings unchanged. Existing configurations that do not match a preset automatically open with Manual tuning enabled, preserving their values. Turning AutoCrop off remembers the previous behavior and tuning for when you enable it again.
+
+The mode-cycle keybind still cycles Off → replant-only → automatic. Replant-only behavior only attempts to replant crops you break yourself and does not retain failed replants.
 
 **Auto-refill seeds** can swap seeds from your main inventory into the hotbar. It prefers an empty slot; if the hotbar is full, it swaps with the selected slot and moves that item into your inventory.
 
