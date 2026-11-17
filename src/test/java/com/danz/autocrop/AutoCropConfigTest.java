@@ -85,6 +85,8 @@ class AutoCropConfigTest {
 
     private AutoCropConfig oldServerConfig() {
         AutoCropConfig config = new AutoCropConfig();
+        config.setupPreset = AutoCropConfig.SetupPreset.SERVER;
+        config.riskBatchSize = 1;
         config.replantDelayTicks = 5;
         config.auraCooldownTicks = 20;
         config.missedReplantRetryCooldownTicks = 40;

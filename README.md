@@ -10,9 +10,9 @@ Active support covers **Minecraft 26.1, 26.2, 26.3, and 1.21.11**. All four jars
 2. Install Fabric Loader **0.20.1 or newer**, Fabric API, Cloth Config, and ModMenu for that same Minecraft version. Use **Java 25**.
 3. Put the mod jars in your instance's `mods` folder and launch Minecraft.
 4. Open **Mods → AutoCrop → Configure**, choose a **Harvest mode**, then save.
-5. Optionally assign **Cycle Harvest Mode** under **Options → Controls → Key Binds → AutoCrop**. It starts unbound to avoid key conflicts.
+5. Optionally assign **Cycle Harvest Mode** under **Options → Controls → Key Binds → AutoCrop**. It starts unbound to avoid key conflicts. The AutoCrop config menu shows a notice until you assign it; hover over the notice for directions.
 
-**Server (safe) is the default preset.** Keep the appropriate seeds, carrots, or potatoes in your hotbar or main inventory. AutoCrop harvests and replants fully grown wheat, carrots, potatoes, and beetroot nearby.
+**Max is the default preset, with Manual tuning off.** Keep the appropriate seeds, carrots, or potatoes in your hotbar or main inventory. AutoCrop harvests and replants fully grown wheat, carrots, potatoes, and beetroot nearby.
 
 ## Harvest mode and Manual tuning
 

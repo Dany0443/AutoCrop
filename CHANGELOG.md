@@ -3,6 +3,7 @@
 ## 1.5.0-dev — Unreleased
 
 ### Added
+- A missing-keybind notice in the config menu, with a hover hint explaining where to assign Cycle Harvest Mode.
 - Exactly two automatic harvest presets: Max and the slower Server (safe).
 - A Manual tuning switch that reveals a separate manual settings section and disables the preset selector.
 - Staged menu edits: cancelling does not affect live farming settings.
@@ -13,6 +14,7 @@
 - Plain-language mode names in the settings screen.
 
 ### Changed
+- New configurations and menu reset defaults use Max with Manual tuning off. Existing saved choices are preserved.
 - Faster Server (safe) preset: 10-tick harvest cooldown, 3-tick replant delay, and 20-tick missed-spot retries; still one crop per batch. Existing untuned Server settings migrate automatically.
 - Updated to Gradle 9.9.1, Loom 1.19.4, Fabric Loader 0.20.1, and current stable target-specific dependencies.
 - Draft releases build fixed source commits, use the requested release version, and include checksums, source provenance, and every commit since the previous published release.

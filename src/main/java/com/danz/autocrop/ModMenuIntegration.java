@@ -6,6 +6,7 @@ import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.Requirement;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 
 import java.util.Optional;
@@ -37,6 +38,10 @@ public class ModMenuIntegration implements ModMenuApi {
         var setup = builder.getOrCreateCategory(text("category.setup"));
 
         setup.addEntry(entries.startTextDescription(text("setup.description")).build());
+        setup.addEntry(entries.startTextDescription(text("keybind.missing").copy().withStyle(ChatFormatting.YELLOW))
+            .setTooltip(text("keybind.missing.tooltip"))
+            .setDisplayRequirement(() -> AutoCropMod.keyCycleMode == null || AutoCropMod.keyCycleMode.isUnbound())
+            .build());
         setup.addEntry(entries.startBooleanToggle(text("option.enabled"), editor.enabled)
             .setDefaultValue(true)
             .setTooltip(text("option.enabled.tooltip"))
@@ -49,7 +54,7 @@ public class ModMenuIntegration implements ModMenuApi {
             .setSaveConsumer(value -> editor.manual = value)
             .build();
         var preset = entries.startEnumSelector(text("option.setupPreset"), AutoCropConfig.SetupPreset.class, editor.preset)
-            .setDefaultValue(AutoCropConfig.SetupPreset.SERVER)
+            .setDefaultValue(defaults.setupPreset)
             .setEnumNameProvider(value -> Component.translatable(((AutoCropConfig.SetupPreset) value).translationKey()))
             .setTooltipSupplier(value -> Optional.of(new Component[] {
                 Component.translatable(value.translationKey() + ".description")

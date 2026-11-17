@@ -35,17 +35,17 @@ public class AutoCropConfig implements ConfigData {
         }
     }
 
-    // New installations use the slower automatic Server preset.
+    // New installations use Max with manual tuning off.
     public HarvestMode harvestMode = HarvestMode.HARVEST_RISKY;
     public HarvestMode resumeMode = HarvestMode.HARVEST_RISKY;
-    public SetupPreset setupPreset = SetupPreset.SERVER;
+    public SetupPreset setupPreset = SetupPreset.MAX;
     public boolean manualTuning = false;
-    public int replantDelayTicks = 3;
-    public int auraCooldownTicks = 10;
-    public int riskBatchSize = 1;
+    public int replantDelayTicks = 0;
+    public int auraCooldownTicks = 1;
+    public int riskBatchSize = 32;
     public boolean autoRefillSeeds = true;
     public boolean rememberMissedReplants = true;
-    public int missedReplantRetryCooldownTicks = 20;
+    public int missedReplantRetryCooldownTicks = 5;
     public boolean fillEmptyFarmland = false;
 
     public void applyPreset(SetupPreset preset) {
@@ -107,7 +107,7 @@ public class AutoCropConfig implements ConfigData {
     @Override
     public void validatePostLoad() {
         if (harvestMode == null) harvestMode = HarvestMode.MANUAL;
-        if (setupPreset == null) setupPreset = SetupPreset.SERVER;
+        if (setupPreset == null) setupPreset = SetupPreset.MAX;
         if (resumeMode == null || resumeMode == HarvestMode.DISABLED) resumeMode = HarvestMode.MANUAL;
         // Upgrade only the exact old Server preset; preserve manual/custom values.
         HarvestMode effectiveMode = harvestMode == HarvestMode.DISABLED ? resumeMode : harvestMode;

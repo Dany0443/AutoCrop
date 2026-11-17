@@ -18,11 +18,13 @@ class ConfigEditorTest {
     }
 
     @Test
-    void newPlayersStartWithSlowerAutomaticServerHarvesting() {
+    void newPlayersStartWithMaxAndManualTuningOff() {
         var config = new AutoCropConfig();
         var editor = new ConfigEditor(config);
-        assertEquals(SERVER, editor.preset);
+        assertEquals(MAX, editor.preset);
         assertFalse(editor.manual);
+        assertEquals(MAX, config.matchingPreset());
+        assertFalse(config.manualTuning);
         assertEquals(HARVEST_RISKY, config.harvestMode);
     }
 

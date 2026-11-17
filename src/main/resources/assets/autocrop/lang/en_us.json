@@ -1,5 +1,7 @@
 {
   "config.autocrop.title": "AutoCrop",
+  "config.autocrop.keybind.missing": "You haven't set a keybind for AutoCrop.",
+  "config.autocrop.keybind.missing.tooltip": "Go to Options > Controls > Key Binds > AutoCrop and assign Cycle Harvest Mode.",
   "config.autocrop.category.general": "General",
   "config.autocrop.option.harvestMode": "Crop behavior",
   "config.autocrop.option.harvestMode.tooltip": "Manual: replant mature crops you break yourself. Automatic: harvest and replant nearby mature crops. Use the main Enable AutoCrop switch to turn everything off.",
