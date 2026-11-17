@@ -1,14 +1,13 @@
 ## Summary
-<!-- Brief explanation of what this PR does -->
+<!-- Explain the user-visible problem and resulting behavior. -->
 
-## Target Minecraft Version
-<!-- Which version branch does this PR target? -->
-- [ ] `main` (Minecraft 26.3)
-- [ ] `26.2`
-- [ ] `26.1`
-- [ ] `1.21.x`
+## Minecraft targets
+- [ ] 26.2
+- [ ] 26.3
+- [ ] Historical version branch (specify):
 
 ## Verification
-- [ ] `./gradlew build` completes successfully
-- [ ] In-game behavior verified
-
+- [ ] `./gradlew build -Pminecraft_target=26.2 --warning-mode fail`
+- [ ] `./gradlew build -Pminecraft_target=26.3 --warning-mode fail`
+- [ ] Workflow selection tests pass (if CI logic changed)
+- [ ] In-game behavior verified (describe scenarios and versions)
