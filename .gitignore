@@ -51,3 +51,6 @@ replay_*.log
 # os generated metadata files
 .DS_Store
 Thumbs.db
+
+# Python workflow test caches
+__pycache__/
