@@ -1,0 +1,68 @@
+name: Compile Minecraft targets
+
+on:
+  workflow_call:
+    inputs:
+      sources:
+        description: JSON matrix of Minecraft versions and their pinned version-branch commits
+        required: true
+        type: string
+      mod_version:
+        description: Optional release version override for jar names and metadata
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    name: Minecraft ${{ matrix.minecraft }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(inputs.sources) }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ matrix.ref }}
+          persist-credentials: false
+      - name: Record version branch source
+        env:
+          VERSION_BRANCH: ${{ matrix.branch }}
+          SOURCE_REF: ${{ matrix.ref }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_REF"
+          echo "Built branch $VERSION_BRANCH at $SOURCE_REF" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/setup-java@v6.3.0
+        with:
+          java-version: '25'
+          distribution: temurin
+      - uses: gradle/actions/setup-gradle@v6.4.1
+      - name: Test and compile
+        env:
+          MINECRAFT_TARGET: ${{ matrix.minecraft }}
+          RELEASE_VERSION: ${{ inputs.mod_version }}
+        run: |
+          ARGS=(build --no-daemon "-Pminecraft_target=$MINECRAFT_TARGET")
+          if [ -n "$RELEASE_VERSION" ]; then
+            ARGS+=("-Pmod_version=$RELEASE_VERSION")
+          fi
+          ./gradlew "${ARGS[@]}"
+      - name: Upload mod jar
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: autocrop-mc${{ matrix.minecraft }}
+          path: |
+            build/${{ matrix.minecraft }}/libs/*.jar
+            !build/${{ matrix.minecraft }}/libs/*-sources.jar
+            !build/${{ matrix.minecraft }}/libs/*-dev.jar
+          if-no-files-found: error
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: test-reports-mc${{ matrix.minecraft }}
+          path: build/${{ matrix.minecraft }}/reports/tests/
+          if-no-files-found: ignore

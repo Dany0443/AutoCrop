@@ -1,32 +1,45 @@
 {
-  "config.autocrop.title": "AutoCrop Settings",
+  "config.autocrop.title": "AutoCrop",
+  "config.autocrop.keybind.missing": "You haven't set a keybind for AutoCrop.",
+  "config.autocrop.keybind.missing.tooltip": "Go to Options > Controls > Key Binds > AutoCrop and assign Cycle Harvest Mode.",
   "config.autocrop.category.general": "General",
-
-  "config.autocrop.option.harvestMode":         "Harvest Mode",
-  "config.autocrop.option.harvestMode.tooltip":  "DISABLED: mod is completely inactive.\nMANUAL: replants only after you left-click a mature crop yourself.\nHARVEST (Risky): automatically scans and breaks crops in a radius every few ticks.",
-
-  "config.autocrop.option.replantDelayTicks":         "Replant Delay (ticks)",
-  "config.autocrop.option.replantDelayTicks.tooltip":  "How many ticks to wait after a crop is broken before sending the replant packet. Increase on high-latency servers to avoid ghost blocks. (0 = instant)",
-
-  "config.autocrop.option.auraCooldownTicks":         "Harvest Cooldown (ticks)",
-  "config.autocrop.option.auraCooldownTicks.tooltip":  "How many ticks between each automatic harvest sweep in Harvest (Risky) mode.",
-
-  "config.autocrop.option.riskBatchSize":         "Batch Size (Risky mode)",
-  "config.autocrop.option.riskBatchSize.tooltip":  "How many crops to break and queue per harvest sweep. Higher values are faster but more aggressive. Only active in Harvest (Risky) mode.",
-
-  "config.autocrop.option.autoRefillSeeds":         "Auto-Refill Seeds from Inventory",
-  "config.autocrop.option.autoRefillSeeds.tooltip":  "When the required seed is not in your hotbar, automatically move a stack from your main inventory (slots 9-35) into a hotbar slot before replanting.",
-
-  "config.autocrop.option.rememberMissedReplants":         "Remember Missed Replants",
-  "config.autocrop.option.rememberMissedReplants.tooltip":  "Only active in Harvest (Risky) mode. Keeps retrying broken crop spots when planting fails (distance, desync, blocked timing, or no seeds).",
-
+  "config.autocrop.option.harvestMode": "Crop behavior",
+  "config.autocrop.option.harvestMode.tooltip": "Manual: replant mature crops you break yourself. Automatic: harvest and replant nearby mature crops. Use the main Enable AutoCrop switch to turn everything off.",
+  "config.autocrop.option.replantDelayTicks": "Replant Delay (ticks)",
+  "config.autocrop.option.replantDelayTicks.tooltip": "Delay before attempting to replant a harvested crop. Increase if the server has not processed the break before planting. Lower values attempt replanting sooner; server processing can add delay.",
+  "config.autocrop.option.auraCooldownTicks": "Automatic Harvest Interval (ticks)",
+  "config.autocrop.option.auraCooldownTicks.tooltip": "Ticks between automatic harvest sweeps once the current batch finishes. Lower values attempt harvesting sooner.",
+  "config.autocrop.option.riskBatchSize": "Crops per Harvest Batch",
+  "config.autocrop.option.riskBatchSize.tooltip": "Maximum crops to harvest in one automatic batch. Smaller batches spread the work out. Manual replanting ignores this setting.",
+  "config.autocrop.option.autoRefillSeeds": "Refill seeds for me",
+  "config.autocrop.option.autoRefillSeeds.tooltip": "Use seeds from your inventory when the hotbar runs out. An empty hotbar slot is preferred. If the hotbar is full, your selected item is moved into your inventory to make room.",
+  "config.autocrop.option.rememberMissedReplants": "Remember Missed Replants",
+  "config.autocrop.option.rememberMissedReplants.tooltip": "Retry the exact spots where you or AutoCrop broke mature crops when replanting fails, seeds are unavailable, or you move out of reach. Does not fill other empty plots unless Fill Empty Farm Plots is enabled.",
   "config.autocrop.option.missedReplantRetryCooldownTicks": "Retry Cooldown (ticks)",
   "config.autocrop.option.missedReplantRetryCooldownTicks.tooltip": "Delay between retry attempts for each remembered spot. Increase to reduce packet spam while moving around large farms.",
-
-  "autocrop.mode.disabled":       "AutoCrop: Disabled",
-  "autocrop.mode.manual":         "AutoCrop: Manual",
-  "autocrop.mode.harvest_risky":  "AutoCrop: Harvest (Risky)",
-
+  "autocrop.mode.disabled": "AutoCrop: Disabled",
+  "autocrop.mode.manual": "AutoCrop: Manual",
+  "autocrop.mode.harvest_risky": "AutoCrop: Harvest (Risky)",
   "autocrop.keybind.cycle": "Cycle Harvest Mode",
-  "key.category.autocrop.keybind_category": "AutoCrop"
+  "key.category.autocrop.keybind_category": "AutoCrop",
+  "config.autocrop.category.automatic": "Automatic Harvesting",
+  "config.autocrop.automatic.description": "These settings apply only to automatic harvesting. Only use automation where the server rules allow it.",
+  "config.autocrop.option.fillEmptyFarmland": "Fill Empty Farm Plots",
+  "config.autocrop.option.fillEmptyFarmland.tooltip": "Optional: plant empty farmland using the first neighboring crop type, and plant nether wart on empty soul sand. Requires Remember Missed Replants and automatic harvesting. Can fill deliberately empty plots or change mixed-crop layouts. Off by default.",
+  "autocrop.mode.disabled.label": "Off",
+  "autocrop.mode.manual.label": "Manual replanting",
+  "autocrop.mode.harvest_risky.label": "Automatic harvest",
+  "config.autocrop.category.setup": "Quick setup",
+  "config.autocrop.setup.description": "Choose a harvest mode, save, and start farming.",
+  "config.autocrop.option.enabled": "Enable AutoCrop",
+  "config.autocrop.option.enabled.tooltip": "Turn AutoCrop on or off. Preset tuning is kept while it is off.",
+  "config.autocrop.option.setupPreset": "Harvest mode",
+  "config.autocrop.preset.server": "Server (safe)",
+  "config.autocrop.preset.server.description": "Slower automatic harvesting: one crop per batch, with longer breaks between actions. Replants crops and retries missed spots. Server rules still apply; no preset guarantees anti-cheat compatibility.",
+  "config.autocrop.preset.max": "Max",
+  "config.autocrop.preset.max.description": "Fastest available automatic timing and largest harvest batches. Best for singleplayer or servers that allow automation. Does not fill unrelated empty plots.",
+  "config.autocrop.advanced.title": "Manual settings",
+  "config.autocrop.advanced.description": "These values override the preset while Manual tuning is on. Turn Manual tuning off to restore the selected preset. Timing uses game ticks (normally 20 ticks = 1 second).",
+  "config.autocrop.option.manualTuning": "Manual tuning",
+  "config.autocrop.option.manualTuning.tooltip": "Open the manual settings menu below and tune individual values yourself. Turn this off to use Max or Server (safe) again."
 }
