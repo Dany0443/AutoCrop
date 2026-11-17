@@ -129,6 +129,7 @@ public final class CropManager {
 
     private void cycleMode(Minecraft client, AutoCropConfig cfg) {
         AutoCropConfig.HarvestMode next = cfg.harvestMode.next();
+        cfg.resumeMode = next == AutoCropConfig.HarvestMode.DISABLED ? cfg.harvestMode : next;
         cfg.harvestMode = next;
 
         AutoConfig.getConfigHolder(AutoCropConfig.class).save();
