@@ -13,7 +13,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BeetrootBlock;
 import net.minecraft.world.level.block.Block;
@@ -180,7 +179,7 @@ public final class CropManager {
             if (!isWithinActionReach(player, immutablePos)) continue;
 
             client.gameMode.startDestroyBlock(immutablePos, Direction.UP);
-            player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
+            MinecraftCompat.swing(player);
             breaksSentThisSweep.add(immutablePos);
             enqueueReplant(new PendingReplant(immutablePos, maybeSeed.get()));
             found++;
@@ -291,7 +290,7 @@ public final class CropManager {
         BlockHitResult hit      = new BlockHitResult(hitVec, Direction.UP, farmland, false);
 
         client.gameMode.useItemOn(player, InteractionHand.MAIN_HAND, hit);
-        player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
+        MinecraftCompat.swing(player);
 
         if (previousSlot >= 0 && previousSlot != seedSlot) {
             inv.selected = previousSlot;
