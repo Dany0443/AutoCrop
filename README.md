@@ -1,70 +1,84 @@
 # AutoCrop
 
-A lightweight, client-side QoL (Quality of Life) mod for Fabric Minecraft that handles the tedious parts of farming for you. It automatically harvests and replants crops based on your settings.
+A client-side Fabric mod that replants mature crops you break and optionally harvests nearby crops automatically.
 
-License: GPL-3.0
+Active development targets **Minecraft 26.2 and 26.3**. Both jars are built from the same gameplay sources. Historical Minecraft versions remain available on their existing version branches.
 
----
+## Install and start farming
 
-## Supported Versions
+1. Choose the AutoCrop jar matching your Minecraft version from GitHub Releases. GitHub Actions also provides development jars under each successful build's **Artifacts** section.
+2. Install Fabric Loader **0.20.1 or newer**, Fabric API, Cloth Config, and ModMenu for that same Minecraft version. Use **Java 25**.
+3. Put the mod jars in your instance's `mods` folder and launch Minecraft.
+4. Open **Mods → AutoCrop → Configure** to choose your mode and settings.
+5. Optionally assign **Cycle Harvest Mode** under **Options → Controls → Key Binds → AutoCrop**. It starts unbound to avoid key conflicts.
 
-AutoCrop provides standalone builds compiled on Java 25 across 13 Minecraft releases:
+**Manual replanting is the default.** Keep the appropriate seeds, carrots, or potatoes in your hotbar or main inventory, then break a fully grown wheat, carrot, potato, or beetroot crop. AutoCrop attempts to replant it after the configured delay.
 
-| Minecraft Version | Loom Remap Target | Recommended Fabric Loader |
-|---|---|---|
-| 1.21.1 | `versions/1.21.1` | `>=0.19.2` |
-| 1.21.2 | `versions/1.21.2` | `>=0.19.2` |
-| 1.21.3 | `versions/1.21.3` | `>=0.19.2` |
-| 1.21.4 | `versions/1.21.4` | `>=0.19.2` |
-| 1.21.5 | `versions/1.21.5` | `>=0.19.2` |
-| 1.21.6 | `versions/1.21.6` | `>=0.19.2` |
-| 1.21.7 | `versions/1.21.7` | `>=0.19.2` |
-| 1.21.8 | `versions/1.21.8` | `>=0.19.2` |
-| 1.21.9 | `versions/1.21.9` | `>=0.19.2` |
-| 1.21.10 | `versions/1.21.10` | `>=0.19.2` |
-| 1.21.11 | `versions/1.21.11` | `>=0.19.2` |
-| 26.1 | `versions/26.1` | `>=0.18.4` |
-| 26.2 | `versions/26.2` | `>=0.18.4` |
+## Modes and settings
 
----
+- **Off:** AutoCrop performs no farming actions.
+- **Replant crops I break:** You harvest mature crops yourself; AutoCrop attempts to replant them. Automatic retries are not available in this mode.
+- **Automatic harvest (check server rules):** AutoCrop scans nearby mature crops, breaks up to the configured batch size, and queues replanting. Only enable it where server rules allow automation.
 
-## How It Works
+**Auto-refill seeds** can swap seeds from your main inventory into the hotbar. It prefers an empty slot; if the hotbar is full, it swaps with the selected slot and moves that item into your inventory.
 
-You can cycle through three different modes using an in-game keybind:
-* **Disabled:** The mod is entirely inactive. Vanilla behavior.
-* **Manual:** You break a fully grown crop yourself, and the mod automatically sends a packet to replant it for you.
-* **Harvest (Risky):** The mod actively scans your surroundings and automatically breaks and replants mature crops in a radius. *(Note: Called "risky" because aggressive settings might get flagged by strict server anti-cheats).*
+**Remember missed replants** retries failed replants in automatic mode. Turning it off clears remembered positions. Queues are also cleared when changing modes, worlds, player sessions, or disconnecting.
 
----
+**Fill empty farm plots** is a separate option, **off by default**. With automatic mode and remembered replants enabled, it also plants unrelated empty farmland based on neighboring crops, or plants nether wart on empty soul sand. It can fill deliberately empty plots and change mixed-crop layouts.
 
-## Features
+Timing controls use game ticks. Increase replant delay if the server has not processed a crop break before planting is attempted. These settings do not guarantee acceptance by server anti-cheat or protection systems.
 
-* **Auto-Refill Seeds:** If your hotbar runs out of seeds, the mod will automatically pull a stack from your main inventory to keep planting.
-* **Missed Replant Memory:** If you run out of seeds completely, it remembers which dirt blocks are empty and will automatically replant them as soon as you pick up more seeds.
-* **Custom Tick Delays:** Tweak the delay (in ticks) for breaking and replanting. Bump this up if you are playing on a laggy or high-ping server to prevent ghost blocks.
-* **In-Game Config:** Fully integrated with Cloth Config so you can tweak your harvest batch sizes and cooldowns without leaving the game.
+## Build either Minecraft version
 
----
+The Gradle wrapper downloads Gradle **9.9.1**. Install a JDK 25, then run:
 
-## Requirements
+```bash
+./gradlew build                         # Minecraft 26.3 (default)
+./gradlew build -Pminecraft_target=26.2
+```
 
-Make sure you have these installed:
-* Fabric Loader (see version table)
-* Fabric API
-* Java 25
-* Cloth Config API (Required for settings)
-* ModMenu (Required to access the config screen)
+Outputs are isolated by target:
 
----
+```text
+build/26.2/libs/autocrop-<version>-mc26.2.jar
+build/26.3/libs/autocrop-<version>-mc26.3.jar
+```
 
-## Installation
+Use the jar without `-sources` for playing. Target-specific dependencies live in `versions/26.2.properties` and `versions/26.3.properties`; shared tooling versions live in `gradle.properties`.
 
-1. Drop the compiled `.jar` file into your `.minecraft/mods` folder along with the required dependencies.
-2. Launch the game.
-3. Configure your preferred keybind in Options -> Key Binds -> AutoCrop.
+## Smart GitHub Actions builds
 
----
+Pushes and pull requests automatically select targets based on changed paths:
+
+| Change | Targets compiled |
+|---|---|
+| Shared gameplay, resources, tests, build tools, or workflows | 26.2 and 26.3 |
+| `versions/26.2.properties` or `src/minecraft26.2/` | 26.2 |
+| `versions/26.3.properties` or `src/minecraft26.3/` | 26.3 |
+| Documentation only | Compilation skipped |
+
+Multiple target-specific changes are combined. Unknown paths and unavailable comparison history conservatively build both targets. New branches also build both.
+
+To choose manually, open **Actions → build → Run workflow**, select the branch containing your changes, and choose **both**, **26.2**, or **26.3**. Each selected target gets its own downloadable jar artifact. All builds compile the selected revision's shared source; they do not fetch separate version-branch implementations.
+
+The stable **Build result** job can be used as a required status check, including documentation-only pull requests.
+
+## Draft releases
+
+Set `mod_version` in `gradle.properties` to the release version, then tag that commit with the same version (optionally prefixed with `v`). A tag push builds both active targets and creates a **draft**, with jar checksums and the source commit attached.
+
+Alternatively, run **Actions → release-draft** with an existing release tag and your chosen Minecraft versions. The tag must match `mod_version` in its commit. Every jar uses that exact commit; moving version branches are not used. Review and publish drafts manually.
+
+## Troubleshooting
+
+- **Nothing happens:** Check the mode, crop maturity, seed availability, and distance. The mode key is unbound until you assign it.
+- **A manual replant fails:** Keep seeds available, stay close, and try increasing replant delay. Manual mode does not retain failed replants.
+- **Your held item moved:** A full hotbar caused auto-refill to swap with your selected slot. Keep a slot empty or disable auto-refill.
+- **Unexpected planting on empty plots:** Turn off Fill Empty Farm Plots.
+- **A mod fails to load:** Confirm all dependency jars match the Minecraft target and meet the minimum versions in the AutoCrop jar.
+
+Report bugs with Minecraft and AutoCrop versions, mode/settings, singleplayer or server context, reproduction steps, and relevant logs.
 
 ## License
 
-GNU General Public License v3.0 (GPL-3.0). See [LICENSE](LICENSE) for details.
+GNU General Public License v3.0. See [LICENSE](LICENSE).
