@@ -79,15 +79,10 @@ jobs:
           path: release_artifacts
           pattern: autocrop-mc*
           merge-multiple: true
-      - name: Record checksums and source
+      - name: Record jar checksums
         working-directory: release_artifacts
-        env:
-          SOURCE_COMMIT: ${{ needs.source.outputs.commit }}
-          VERSION_SOURCES: ${{ needs.source.outputs.sources }}
         run: |
           sha256sum ./*.jar > SHA256SUMS.txt
-          echo "$SOURCE_COMMIT" > SOURCE_COMMIT.txt
-          echo "$VERSION_SOURCES" > RELEASE_SOURCES.json
       - name: Create or update draft with all commits since previous release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
