@@ -66,16 +66,12 @@ public class ModMenuIntegration implements ModMenuApi {
         );
 
         ConfigCategory risky = builder.getOrCreateCategory(
-            Component.literal("Harvest (Risky) Settings")
+            Component.translatable("config.autocrop.category.automatic")
         );
 
         risky.addEntry(
             eb.startTextDescription(
-                Component.literal(
-                    "§eThese options only apply in HARVEST_RISKY mode.\n" +
-                    "§cDo NOT use Harvest (Risky) on servers with anti-cheat " +
-                    "(e.g. GrimAC, Vulcan). Use only on private SMPs or your own server."
-                )
+                Component.translatable("config.autocrop.automatic.description")
             ).build()
         );
 
@@ -120,6 +116,17 @@ public class ModMenuIntegration implements ModMenuApi {
                 .setDefaultValue(20)
                 .setTooltip(Component.translatable("config.autocrop.option.missedReplantRetryCooldownTicks.tooltip"))
                 .setSaveConsumer(v -> cfg.missedReplantRetryCooldownTicks = v)
+                .build()
+        );
+
+        risky.addEntry(
+            eb.startBooleanToggle(
+                    Component.translatable("config.autocrop.option.fillEmptyFarmland"),
+                    cfg.fillEmptyFarmland
+                )
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("config.autocrop.option.fillEmptyFarmland.tooltip"))
+                .setSaveConsumer(v -> cfg.fillEmptyFarmland = v)
                 .build()
         );
 

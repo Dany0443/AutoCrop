@@ -41,6 +41,9 @@ public class AutoCropConfig implements ConfigData {
 
     public int missedReplantRetryCooldownTicks = 20;
 
+    // Existing config files also default to leaving unrelated empty plots alone.
+    public boolean fillEmptyFarmland = false;
+
     public static void register() {
         AutoConfig.register(AutoCropConfig.class, GsonConfigSerializer::new);
     }

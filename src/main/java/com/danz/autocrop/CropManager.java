@@ -55,6 +55,10 @@ public final class CropManager {
 
     private final Set<BlockPos> breaksSentThisSweep = new HashSet<>();
 
+    private ClientLevel activeLevel;
+    private LocalPlayer activePlayer;
+    private AutoCropConfig.HarvestMode previousMode;
+
     private int delayTimer   = 0;
     private int auraTimer    = 0;
     private int previousSlot = -1;
@@ -65,11 +69,23 @@ public final class CropManager {
     private CropManager() {}
 
     public void onEndTick(Minecraft client) {
+        // Block positions belong to one world and player session only.
+        if (client.level != activeLevel || client.player != activePlayer) {
+            resetAutomation();
+            activeLevel = client.level;
+            activePlayer = client.player;
+        }
         if (client.player == null || client.level == null || client.gameMode == null) return;
 
         tickCounter++;
 
         AutoCropConfig cfg = AutoCropConfig.get();
+        // Settings-screen changes need the same cleanup as the mode keybind.
+        if (cfg.harvestMode != previousMode) {
+            resetAutomation();
+            previousMode = cfg.harvestMode;
+        }
+        if (!cfg.rememberMissedReplants) clearRememberedReplants();
 
         if (AutoCropMod.keyCycleMode.consumeClick()) {
             cycleMode(client, cfg);
@@ -118,11 +134,8 @@ public final class CropManager {
 
         AutoConfig.getConfigHolder(AutoCropConfig.class).save();
 
-        clearQueue();
-        machineState = MachineState.IDLE;
-        if (next != AutoCropConfig.HarvestMode.HARVEST_RISKY) {
-            clearRememberedReplants();
-        }
+        resetAutomation();
+        previousMode = next;
 
         showOverlayMessage(client, Component.translatable(next.translationKey()));
     }
@@ -183,13 +196,14 @@ public final class CropManager {
             breaksSentThisSweep.add(immutablePos);
             enqueueReplant(new PendingReplant(immutablePos, maybeSeed.get()));
             found++;
+            if (found >= Math.max(1, cfg.riskBatchSize)) break;
         }
 
         if (found > 0) auraTimer = cfg.auraCooldownTicks;
     }
 
     private void retryMissedReplants(Minecraft client, AutoCropConfig cfg) {
-        if (missedReplants.isEmpty()) return;
+        if (!cfg.rememberMissedReplants || missedReplants.isEmpty()) return;
 
         LocalPlayer player = client.player;
         ClientLevel level  = client.level;
@@ -308,7 +322,7 @@ public final class CropManager {
     }
 
     private void scanForUntrackedHoles(Minecraft client, AutoCropConfig cfg) {
-        if (!cfg.rememberMissedReplants) return;
+        if (!cfg.fillEmptyFarmland || !cfg.rememberMissedReplants) return;
         if (queue.size() >= Math.max(1, cfg.riskBatchSize)) return;
 
         LocalPlayer player = client.player;
@@ -392,6 +406,17 @@ public final class CropManager {
         if (!queuedPositions.add(replant.pos())) return false;
         queue.add(replant);
         return true;
+    }
+
+    private void resetAutomation() {
+        clearQueue();
+        clearRememberedReplants();
+        breaksSentThisSweep.clear();
+        machineState = MachineState.IDLE;
+        delayTimer = 0;
+        auraTimer = 0;
+        previousSlot = -1;
+        tickCounter = 0;
     }
 
     private void clearQueue() {
